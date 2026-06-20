@@ -19,20 +19,20 @@
 }
 
 :root[data-theme="light"] {
-  --bg: #edf4fb;
-  --bg-soft: #dbe8f4;
-  --panel: rgba(255, 255, 255, .84);
-  --panel-2: rgba(8, 17, 31, .045);
-  --line: rgba(15, 23, 42, .12);
-  --text: #111827;
-  --muted: #4b5b70;
-  --faint: #708199;
-  --blue: #1677c2;
-  --blue-strong: #0b5eab;
-  --green: #10894a;
-  --red: #d62f53;
+  --bg: #f3f7fc;
+  --bg-soft: #e4edf7;
+  --panel: rgba(255, 255, 255, .94);
+  --panel-2: rgba(15, 23, 42, .06);
+  --line: rgba(15, 23, 42, .16);
+  --text: #0f172a;
+  --muted: #334155;
+  --faint: #64748b;
+  --blue: #086db6;
+  --blue-strong: #07599a;
+  --green: #087a43;
+  --red: #be123c;
   --yellow: #f59e0b;
-  --shadow: 0 22px 58px rgba(29, 49, 78, .18);
+  --shadow: 0 22px 58px rgba(29, 49, 78, .16);
 }
 
 * {
@@ -275,7 +275,47 @@ h2 {
 :root[data-theme="light"] .select,
 :root[data-theme="light"] .key-form input,
 :root[data-theme="light"] .password-reset-row input {
-  background: rgba(255, 255, 255, .72);
+  background: rgba(255, 255, 255, .92);
+  color: var(--text);
+}
+
+:root[data-theme="light"] .segmented,
+:root[data-theme="light"] .row-key,
+:root[data-theme="light"] .share-key {
+  background: rgba(15, 23, 42, .06);
+}
+
+:root[data-theme="light"] .row,
+:root[data-theme="light"] .admin-user,
+:root[data-theme="light"] .metric {
+  background: rgba(255, 255, 255, .76);
+  border-color: rgba(15, 23, 42, .13);
+}
+
+:root[data-theme="light"] .row:hover,
+:root[data-theme="light"] .row:focus-visible {
+  background: rgba(255, 255, 255, .96);
+}
+
+:root[data-theme="light"] .row-claimed {
+  opacity: .76;
+}
+
+:root[data-theme="light"] .seg-btn.is-active,
+:root[data-theme="light"] .btn-muted,
+:root[data-theme="light"] .icon-button,
+:root[data-theme="light"] .user-pill {
+  background: rgba(15, 23, 42, .07);
+}
+
+:root[data-theme="light"] .btn-danger {
+  background: rgba(190, 18, 60, .1);
+  border-color: rgba(190, 18, 60, .28);
+  color: #9f1239;
+}
+
+:root[data-theme="light"] .toast {
+  background: rgba(255, 255, 255, .96);
 }
 
 .auth-form input:focus,
@@ -728,6 +768,10 @@ h2 {
   border-radius: var(--radius);
 }
 
+.settings-card {
+  width: min(760px, 100%);
+}
+
 .detail-card {
   position: relative;
   width: min(720px, 100%);
@@ -903,6 +947,64 @@ h2 {
   padding: 18px;
 }
 
+.settings-body {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  overflow: auto;
+  max-height: calc(100dvh - 160px);
+}
+
+.settings-section {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-section h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: .02em;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.metric {
+  min-height: 76px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, .075);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .04);
+}
+
+.metric span {
+  color: var(--faint);
+  font: 700 11px/1 var(--mono);
+  text-transform: uppercase;
+}
+
+.metric strong {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.settings-actions .btn {
+  flex: 1 1 170px;
+}
+
 .password-reset-row {
   display: grid;
   grid-template-columns: minmax(160px, 1fr) auto auto;
@@ -1049,6 +1151,10 @@ h2 {
   }
 
   .admin-user {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-grid {
     grid-template-columns: 1fr;
   }
 

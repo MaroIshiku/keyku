@@ -492,6 +492,90 @@ def admin_notifications():
     return jsonify({"pendingUsers": pending_users, "reactivationRequests": reactivations, "passwordResetRequests": resets, "notificationCount": len(pending_users) + len(reactivations) + len(resets)})
 
 
+def admin_settings_summary():
+    keys = read_keys()
+    users = read_users()["users"]
+    reactivation_requests = read_reactivation_requests()["requests"]
+    password_reset_requests = read_password_reset_requests()["requests"]
+    used_keys = sum(1 for entry in keys if entry.get("redeemedAt"))
+    return {
+        "keys": {
+            "total": len(keys),
+            "free": len(keys) - used_keys,
+            "used": used_keys,
+        },
+        "users": {
+            "total": len(users),
+            "approved": sum(1 for user in users if user.get("status") == "approved"),
+            "pending": sum(1 for user in users if user.get("status") == "pending"),
+            "rejected": sum(1 for user in users if user.get("status") == "rejected"),
+        },
+        "requests": {
+            "pendingReactivations": sum(1 for req in reactivation_requests if req.get("status") == "pending"),
+            "pendingPasswordResets": sum(1 for req in password_reset_requests if req.get("status") == "pending"),
+            "resolvedReactivations": sum(1 for req in reactivation_requests if req.get("status") != "pending"),
+            "resolvedPasswordResets": sum(1 for req in password_reset_requests if req.get("status") != "pending"),
+        },
+    }
+
+
+@app.get("/api/admin/settings")
+def admin_settings():
+    admin, error = require_admin()
+    if error:
+        return error
+    return jsonify(admin_settings_summary())
+
+
+@app.post("/api/admin/maintenance/delete-used-keys")
+def admin_delete_used_keys():
+    admin, error = require_admin()
+    if error:
+        return error
+    with file_lock:
+        keys = read_keys()
+        kept = [entry for entry in keys if not entry.get("redeemedAt")]
+        removed = len(keys) - len(kept)
+        if removed:
+            write_keys(kept)
+    return jsonify({"ok": True, "removed": removed, "summary": admin_settings_summary()})
+
+
+@app.post("/api/admin/maintenance/reactivate-used-keys")
+def admin_reactivate_used_keys():
+    admin, error = require_admin()
+    if error:
+        return error
+    with file_lock:
+        keys = read_keys()
+        changed = 0
+        for entry in keys:
+            if entry.get("redeemedAt"):
+                entry["redeemedAt"] = ""
+                changed += 1
+        if changed:
+            write_keys(keys)
+    return jsonify({"ok": True, "changed": changed, "summary": admin_settings_summary()})
+
+
+@app.post("/api/admin/maintenance/clear-resolved-requests")
+def admin_clear_resolved_requests():
+    admin, error = require_admin()
+    if error:
+        return error
+    with file_lock:
+        reactivation_data = read_reactivation_requests()
+        password_data = read_password_reset_requests()
+        reactivation_pending = [req for req in reactivation_data["requests"] if req.get("status") == "pending"]
+        password_pending = [req for req in password_data["requests"] if req.get("status") == "pending"]
+        removed = (len(reactivation_data["requests"]) - len(reactivation_pending)) + (len(password_data["requests"]) - len(password_pending))
+        reactivation_data["requests"] = reactivation_pending
+        password_data["requests"] = password_pending
+        write_reactivation_requests(reactivation_data)
+        write_password_reset_requests(password_data)
+    return jsonify({"ok": True, "removed": removed, "summary": admin_settings_summary()})
+
+
 @app.post("/api/admin/users/<user_id>/approve")
 def admin_user_approve(user_id):
     admin, error = require_admin()

@@ -11,6 +11,7 @@ Self-hosted Steam-Key-Vault fuer Docker/ZimaOS. Die App nutzt eine kleine Python
 - Key anzeigen, kopieren, teilen, einloesen, Steam/SteamDB suchen
 - Reaktivierungsanfragen fuer verbrauchte Keys
 - Admin kann Keys anlegen, bearbeiten, loeschen und reaktivieren
+- Admin-Settings mit Bulk-Aktionen fuer Wartung
 - Light/Dark-Mode, transparentes KeyVault-Logo und Favicon
 
 ## Struktur
@@ -109,3 +110,10 @@ docker compose logs -f
 docker compose restart
 docker compose down
 ```
+
+In der App finden Admins unter dem Zahnrad:
+
+- benutzte Keys gesammelt loeschen
+- benutzte Keys gesammelt reaktivieren
+- erledigte Anfragen aufraeumen
+- schnelle Uebersicht ueber Keys, Nutzer und Requests

@@ -25,8 +25,11 @@ const adminOpen = $("#admin-open");
 const pendingBadge = $("#pending-badge");
 const notificationDot = $("#notification-dot");
 const themeToggle = $("#theme-toggle");
+const settingsOpen = $("#settings-open");
 const adminPanel = $("#admin-panel");
 const adminUsers = $("#admin-users");
+const settingsPanel = $("#settings-panel");
+const settingsBody = $("#settings-body");
 const segButtons = $$(".seg-btn");
 const counts = {
   all: $('[data-count="all"]'),
@@ -68,6 +71,9 @@ const requiredElements = {
   sort,
   notificationDot,
   themeToggle,
+  settingsOpen,
+  settingsPanel,
+  settingsBody,
   detailPanel,
   keyForm,
   detailShareLink,
@@ -108,7 +114,7 @@ const themeStorageKey = "steam-key-vault-theme";
 function preferredTheme() {
   const stored = localStorage.getItem(themeStorageKey);
   if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  return "dark";
 }
 
 function setTheme(theme) {
@@ -232,6 +238,7 @@ function showApp(user, meta = {}) {
   appView.hidden = false;
   userPill.textContent = `${user.username}${user.role === "admin" ? " · Admin" : ""}`;
   adminOpen.hidden = user.role !== "admin";
+  settingsOpen.hidden = user.role !== "admin";
   newKeyBtn.hidden = user.role !== "admin";
   updateNotificationIndicator(pendingCount);
 }
@@ -714,6 +721,102 @@ themeToggle.addEventListener("click", () => {
   setTheme(current === "light" ? "dark" : "light");
 });
 
+function metric(label, value) {
+  return `
+    <div class="metric">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+    </div>
+  `;
+}
+
+function renderSettings(data) {
+  const keys = data.keys || {};
+  const users = data.users || {};
+  const requests = data.requests || {};
+  settingsBody.innerHTML = `
+    <section class="settings-section">
+      <h3>Vault</h3>
+      <div class="metric-grid">
+        ${metric("All", keys.total ?? 0)}
+        ${metric("Free", keys.free ?? 0)}
+        ${metric("Used", keys.used ?? 0)}
+      </div>
+    </section>
+    <section class="settings-section">
+      <h3>Users</h3>
+      <div class="metric-grid">
+        ${metric("Total", users.total ?? 0)}
+        ${metric("Approved", users.approved ?? 0)}
+        ${metric("Pending", users.pending ?? 0)}
+      </div>
+    </section>
+    <section class="settings-section">
+      <h3>Requests</h3>
+      <div class="metric-grid">
+        ${metric("Reactivation", requests.pendingReactivations ?? 0)}
+        ${metric("Password reset", requests.pendingPasswordResets ?? 0)}
+        ${metric("Resolved", (requests.resolvedReactivations ?? 0) + (requests.resolvedPasswordResets ?? 0))}
+      </div>
+    </section>
+    <section class="settings-section danger-zone">
+      <h3>Maintenance</h3>
+      <div class="settings-actions">
+        <button class="btn btn-danger" type="button" data-setting-action="delete-used">Delete used keys</button>
+        <button class="btn btn-muted" type="button" data-setting-action="reactivate-used">Reactivate used keys</button>
+        <button class="btn btn-muted" type="button" data-setting-action="clear-resolved">Clear resolved requests</button>
+      </div>
+    </section>
+  `;
+}
+
+async function loadAdminSettings() {
+  settingsBody.innerHTML = '<div class="placeholder">Lade Settings...</div>';
+  try {
+    const data = await api("/api/admin/settings");
+    renderSettings(data);
+  } catch (error) {
+    settingsBody.innerHTML = `<div class="placeholder error">${escapeHtml(error.message)}</div>`;
+  }
+}
+
+settingsOpen.addEventListener("click", async () => {
+  settingsPanel.hidden = false;
+  await loadAdminSettings();
+});
+
+settingsPanel.addEventListener("click", async (event) => {
+  if (event.target.closest("[data-settings-close]")) {
+    settingsPanel.hidden = true;
+    return;
+  }
+  const actionButton = event.target.closest("[data-setting-action]");
+  if (!actionButton) return;
+  const action = actionButton.dataset.settingAction;
+  const messages = {
+    "delete-used": "Alle benutzten Keys endgültig löschen?",
+    "reactivate-used": "Alle benutzten Keys wieder als frei markieren?",
+    "clear-resolved": "Alle erledigten Anfragen aus der Historie entfernen?",
+  };
+  if (!window.confirm(messages[action] || "Aktion ausführen?")) return;
+  const paths = {
+    "delete-used": "/api/admin/maintenance/delete-used-keys",
+    "reactivate-used": "/api/admin/maintenance/reactivate-used-keys",
+    "clear-resolved": "/api/admin/maintenance/clear-resolved-requests",
+  };
+  actionButton.disabled = true;
+  try {
+    const result = await api(paths[action], { method: "POST", body: "{}" });
+    if (result.summary) renderSettings(result.summary);
+    await loadKeys();
+    showToast("Settings aktualisiert", "success");
+  } catch (error) {
+    showToast(error.message || "Aktion fehlgeschlagen", "error");
+  } finally {
+    actionButton.disabled = false;
+  }
+});
+
 search.addEventListener("input", (event) => {
   filterQuery = event.target.value;
   renderKeys();
@@ -864,6 +967,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     if (!detailPanel.hidden) closeDetail();
     if (!adminPanel.hidden) adminPanel.hidden = true;
+    if (!settingsPanel.hidden) settingsPanel.hidden = true;
   }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k" && !appView.hidden) {
     event.preventDefault();
