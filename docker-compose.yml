@@ -22,6 +22,9 @@ services:
       - PASSWORD_RESET_REQUESTS_PATH=/app/data/password-reset-requests.json
       - SESSION_SECRET_FILE=/app/data/session-secret.txt
       - PUBLIC_DIR=/app/public
+      # Optional: set to your external HTTPS URL so generated share links use the public host.
+      # Example: https://keys.example.com
+      - PUBLIC_BASE_URL=
       - PORT=3000
 
     healthcheck:

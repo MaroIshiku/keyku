@@ -1,45 +1,45 @@
 # Ish KeyVault
 
-Self-hosted Steam-Key-Vault fuer Docker/ZimaOS. Die App nutzt eine kleine Python/Flask-WebUI, liest und schreibt eine gemeinsame `data/keys.csv`, ist per Login geschuetzt und erlaubt neue Nutzer erst nach Admin-Freigabe.
+Self-hosted Steam key vault for Docker and ZimaOS. The app uses a small Python/Flask web UI, reads and writes one shared `data/keys.csv`, is protected by login, and requires admin approval for every user after the first account.
 
-## Funktionen
+## Features
 
-- Gemeinsame Steam-Key-Liste fuer alle Nutzer
-- Login, Registrierung und Admin-Approval
-- Passwortreset-Anfrage im Login, neues Passwort nur durch Admin in Notifications
-- Share-Link pro Key ohne Login, kryptisch per HMAC-Token
-- Key anzeigen, kopieren, teilen, einloesen, Steam/SteamDB suchen
-- Reaktivierungsanfragen fuer verbrauchte Keys
-- Admin kann Keys anlegen, bearbeiten, loeschen und reaktivieren
-- Admin-Settings mit Bulk-Aktionen fuer Wartung
-- Light/Dark-Mode, transparentes KeyVault-Logo und Favicon
+- One shared Steam key list for all approved users
+- Login, registration, and admin approval
+- Password reset requests from the login screen, completed only by an admin in Notifications
+- Public share links per key without login, protected by cryptic HMAC tokens
+- Reveal, copy, share, redeem, and search keys on Steam or SteamDB
+- Reactivation requests for used keys
+- Admin key management: create, edit, delete, and reactivate entries
+- Admin settings with bulk maintenance actions
+- Light and dark themes, transparent KeyVault logo, and favicon
 
-## Struktur
+## Structure
 
 ```text
 ish-keyvault/
-├── docker-compose.yml
-├── python/
-│   ├── app.py
-│   ├── Dockerfile
-│   └── requirements.txt
-├── public/
-│   ├── index.html
-│   ├── script.js
-│   ├── style.css
-│   ├── share.html
-│   ├── share.js
-│   ├── logo.svg
-│   ├── favicon.svg
-│   ├── favicon.png
-│   └── icon-512.png
-└── data/
-    └── keys.csv
+|-- docker-compose.yml
+|-- python/
+|   |-- app.py
+|   |-- Dockerfile
+|   `-- requirements.txt
+|-- public/
+|   |-- index.html
+|   |-- script.js
+|   |-- style.css
+|   |-- share.html
+|   |-- share.js
+|   |-- logo.svg
+|   |-- favicon.svg
+|   |-- favicon.png
+|   `-- icon-512.png
+`-- data/
+    `-- keys.csv
 ```
 
-## CSV-Format
+## CSV Format
 
-`data/keys.csv` bleibt die persistente Key-Liste:
+`data/keys.csv` remains the persistent key list:
 
 ```csv
 Game,Key,RedeemedAt,addedAt
@@ -47,16 +47,16 @@ Hollow Knight,AAAAA-BBBBB-CCCCC,,2026-01-01T00:00:00.000Z
 Dead Cells,DDDDD-EEEEE-FFFFF,,
 ```
 
-`Game` und `Key` muessen gesetzt sein. `RedeemedAt` leer lassen, wenn ein Key frei ist. Die App setzt den Zeitstempel beim Einloesen. `addedAt` ist optional.
+`Game` and `Key` are required. Leave `RedeemedAt` empty when a key is free. The app sets the timestamp when a key is redeemed. `addedAt` is optional.
 
-## Start auf ZimaOS / Docker
+## ZimaOS / Docker
 
-Die Compose-Datei ist fuer ZimaOS optimiert:
+The Compose file is optimized for ZimaOS:
 
-- kein lokaler Build auf dem ZimaOS Host
-- keine relativen Bind-Pfade
-- App-Daten persistent unter `/DATA/AppData/ish-keyvault/data`
-- Image wird aus GHCR gezogen
+- no local build on the ZimaOS host
+- no relative bind paths
+- persistent app data under `/DATA/AppData/ish-keyvault/data`
+- image pulled directly from GHCR
 
 ```bash
 mkdir -p /DATA/AppData/ish-keyvault/data
@@ -64,46 +64,52 @@ docker compose pull
 docker compose up -d
 ```
 
-Aufruf:
+Open the app at:
 
 ```text
 http://<zima-ip>:8080
 ```
 
-Wenn ein HTTPS-Host oder Reverse Proxy davor sitzt, leite ihn auf `http://<zima-ip>:8080` weiter. Die App respektiert `X-Forwarded-Proto`, damit Secure-Cookies bei HTTPS korrekt funktionieren.
+If you run the app behind an HTTPS host or reverse proxy, forward it to `http://<zima-ip>:8080`. The app respects `X-Forwarded-Proto`, so secure cookies work correctly behind HTTPS.
 
-Das Compose-File nutzt das fertige GHCR-Image:
+Set `PUBLIC_BASE_URL` in `docker-compose.yml` to your external HTTPS URL when generated share links should always use the public host:
+
+```yaml
+- PUBLIC_BASE_URL=https://keys.example.com
+```
+
+The Compose file uses this prebuilt GHCR image:
 
 ```text
 ghcr.io/maroishiku/ish-keyvault:latest
 ```
 
-## Erster Login
+## First Login
 
-1. App oeffnen.
-2. Registrieren.
-3. Der allererste Nutzer wird automatisch Admin.
-4. Alle weiteren Registrierungen erscheinen in der Glocke und muessen vom Admin angenommen werden.
+1. Open the app.
+2. Register.
+3. The first user automatically becomes an admin.
+4. Every later registration appears behind the bell icon and must be approved by an admin.
 
-Die App erzeugt persistent:
+The app creates these persistent files:
 
 - `data/users.json`
 - `data/reactivation-requests.json`
 - `data/password-reset-requests.json`
 - `data/session-secret.txt`
 
-Diese Dateien zusammen mit `data/keys.csv` sichern.
+Back up those files together with `data/keys.csv`.
 
-## Sicherheit
+## Security
 
-- Passwoerter werden mit PBKDF2/SHA-256, Salt und hoher Iterationszahl gespeichert.
-- Vorhandene Nutzerdateien aus der Node-Version bleiben kompatibel.
-- Sessions laufen ueber signierte HttpOnly-Cookies.
-- Klartext-Keys werden nicht in der normalen Listen-API ausgeliefert.
-- Share-Links sind nicht login-geschuetzt, aber kryptisch per HMAC und nicht erratbar.
-- Daten werden atomar geschrieben, damit CSV/JSON bei Neustarts stabil bleiben.
+- Passwords are stored with PBKDF2/SHA-256, per-user salt, and a high iteration count.
+- Existing user files from the Node version remain compatible.
+- Sessions use signed HttpOnly cookies.
+- Plaintext keys are not returned by the normal list API.
+- Share links are public, but cryptic and not guessable because they use HMAC tokens.
+- CSV and JSON files are written atomically to stay stable across restarts.
 
-## Wartung
+## Maintenance
 
 ```bash
 docker compose logs -f
@@ -111,9 +117,9 @@ docker compose restart
 docker compose down
 ```
 
-In der App finden Admins unter dem Zahnrad:
+Admins can open the gear icon in the app to:
 
-- benutzte Keys gesammelt loeschen
-- benutzte Keys gesammelt reaktivieren
-- erledigte Anfragen aufraeumen
-- schnelle Uebersicht ueber Keys, Nutzer und Requests
+- delete all used keys
+- reactivate all used keys
+- clear resolved requests
+- review quick metrics for keys, users, and requests

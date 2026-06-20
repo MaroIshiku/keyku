@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -11,7 +11,7 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20260620-1" />
   <link rel="icon" type="image/png" href="/favicon.png?v=20260620-1" />
   <link rel="apple-touch-icon" href="/icon-512.png?v=20260620-1" />
-  <link rel="stylesheet" href="/style.css?v=20260620-2" />
+  <link rel="stylesheet" href="/style.css?v=20260620-3" />
 </head>
 <body>
   <div class="scene" aria-hidden="true">
@@ -26,26 +26,26 @@
         <img class="brand-logo" src="/logo.svg?v=20260620-1" alt="" />
         <span>Steam Key Vault</span>
       </div>
-      <p class="auth-kicker">Geschützter Zugriff</p>
-      <h1 id="auth-title">Einloggen</h1>
-      <p id="auth-copy" class="auth-copy">Melde dich an, um die gemeinsame Key-Liste zu sehen.</p>
+      <p class="auth-kicker">Protected access</p>
+      <h1 id="auth-title">Sign in</h1>
+      <p id="auth-copy" class="auth-copy">Sign in to access the shared key vault.</p>
 
       <form id="auth-form" class="auth-form" autocomplete="on">
         <label>
-          <span>Nutzername</span>
+          <span>Username</span>
           <input id="auth-username" name="username" type="text" inputmode="text" autocomplete="username" required minlength="3" maxlength="32" />
         </label>
         <label>
-          <span>Passwort</span>
+          <span>Password</span>
           <input id="auth-password" name="password" type="password" autocomplete="current-password" required minlength="10" />
         </label>
-        <button id="auth-submit" class="btn btn-primary" type="submit">Einloggen</button>
+        <button id="auth-submit" class="btn btn-primary" type="submit">Sign in</button>
       </form>
 
       <p id="auth-message" class="auth-message" role="status" aria-live="polite"></p>
       <div class="auth-links">
-        <button id="auth-switch" class="link-button" type="button">Noch keinen Zugang? Registrieren</button>
-        <button id="password-reset-request" class="link-button" type="button">Passwort vergessen?</button>
+        <button id="auth-switch" class="link-button" type="button">Need access? Register</button>
+        <button id="password-reset-request" class="link-button" type="button">Forgot password?</button>
       </div>
     </section>
   </main>
@@ -57,7 +57,7 @@
         <span>Vault</span>
       </div>
       <div class="top-actions">
-        <button id="new-key" class="btn btn-muted" type="button" hidden>Neuer Key</button>
+        <button id="new-key" class="btn btn-muted" type="button" hidden>New key</button>
         <button id="admin-open" class="icon-button notification-button" type="button" hidden title="Notifications" aria-label="Notifications">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span id="notification-dot" class="notification-dot" hidden></span>
@@ -66,12 +66,12 @@
         <button id="settings-open" class="icon-button" type="button" hidden title="Admin Settings" aria-label="Admin Settings">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.08V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.2.36.49.65.85.85.25.14.54.22.84.22H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15Z"/></svg>
         </button>
-        <button id="theme-toggle" class="icon-button" type="button" aria-label="Theme wechseln" title="Theme wechseln">
+        <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle theme" title="Toggle theme">
           <svg class="theme-icon theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
           <svg class="theme-icon theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6.5 6.5 0 0 0 8.8 8.8 9 9 0 1 1-8.8-8.8Z"/></svg>
         </button>
         <span id="user-pill" class="user-pill"></span>
-        <button id="logout" class="icon-button" type="button" aria-label="Ausloggen" title="Ausloggen">
+        <button id="logout" class="icon-button" type="button" aria-label="Sign out" title="Sign out">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
         </button>
       </div>
@@ -80,39 +80,39 @@
     <section class="panel">
       <div class="panel-head">
         <div>
-          <p class="kicker">Gemeinsame Liste</p>
+          <p class="kicker">Shared vault</p>
           <h1>Steam Keys</h1>
-          <p id="hero-sub" class="summary">- verfügbar · - eingelöst · - insgesamt</p>
+          <p id="hero-sub" class="summary">- free - - used - - total</p>
         </div>
         <div class="toolbar">
           <label class="search">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <input id="search" type="search" placeholder="Spiel suchen" autocomplete="off" spellcheck="false" />
+            <input id="search" type="search" placeholder="Search game" autocomplete="off" spellcheck="false" />
           </label>
-          <div class="segmented" role="tablist" aria-label="Statusfilter">
+          <div class="segmented" role="tablist" aria-label="Status filter">
             <button class="seg-btn is-active" type="button" data-filter="all">All <span data-count="all">0</span></button>
             <button class="seg-btn" type="button" data-filter="available">Free <span data-count="available">0</span></button>
             <button class="seg-btn" type="button" data-filter="claimed">Used <span data-count="claimed">0</span></button>
           </div>
-          <select id="sort" class="select" aria-label="Sortierung">
+          <select id="sort" class="select" aria-label="Sort">
             <option value="name-asc">Name A-Z</option>
             <option value="name-desc">Name Z-A</option>
-            <option value="added-desc">Neueste zuerst</option>
-            <option value="status-available">Freie zuerst</option>
-            <option value="status-claimed">Verbrauchte zuerst</option>
+            <option value="added-desc">Newest first</option>
+            <option value="status-available">Free first</option>
+            <option value="status-claimed">Used first</option>
           </select>
         </div>
       </div>
 
       <div class="table-head" aria-hidden="true">
         <span>#</span>
-        <span>Spiel</span>
-        <span>Schlüssel</span>
+        <span>Game</span>
+        <span>Key</span>
         <span>Status</span>
         <span></span>
       </div>
       <ul id="rows" class="rows">
-        <li class="placeholder">Lade Vault...</li>
+        <li class="placeholder">Loading vault...</li>
       </ul>
     </section>
   </div>
@@ -125,7 +125,7 @@
           <p class="kicker">Admin</p>
           <h2 id="admin-title">Notifications</h2>
         </div>
-        <button class="icon-button" type="button" data-modal-close aria-label="Schließen" title="Schließen">
+        <button class="icon-button" type="button" data-modal-close aria-label="Close" title="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
         </button>
       </div>
@@ -141,7 +141,7 @@
           <p class="kicker">Admin</p>
           <h2 id="settings-title">Settings</h2>
         </div>
-        <button class="icon-button" type="button" data-settings-close aria-label="Schließen" title="Schließen">
+        <button class="icon-button" type="button" data-settings-close aria-label="Close" title="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
         </button>
       </div>
@@ -155,58 +155,58 @@
       <div class="detail-head">
         <div>
           <p id="detail-status" class="kicker">Key</p>
-          <h2 id="detail-title">Eintrag</h2>
+          <h2 id="detail-title">Entry</h2>
         </div>
-        <button class="icon-button" type="button" data-detail-close aria-label="Schließen" title="Schließen">
+        <button class="icon-button" type="button" data-detail-close aria-label="Close" title="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
         </button>
       </div>
 
       <form id="key-form" class="key-form">
         <label>
-          <span>Spiel</span>
+          <span>Game</span>
           <input id="detail-game" name="game" type="text" maxlength="180" required />
         </label>
         <label>
-          <span>Schlüssel</span>
+          <span>Key</span>
           <div class="key-input-row">
             <input id="detail-key" name="key" type="password" maxlength="140" required />
-            <button id="detail-reveal" class="btn btn-muted" type="button">Anzeigen</button>
+            <button id="detail-reveal" class="btn btn-muted" type="button">Reveal</button>
           </div>
         </label>
         <label class="admin-only-field">
-          <span>Hinzugefügt</span>
+          <span>Added</span>
           <input id="detail-added" name="addedAt" type="datetime-local" />
         </label>
         <label class="admin-only-field">
-          <span>Eingelöst</span>
+          <span>Redeemed</span>
           <input id="detail-redeemed" name="redeemedAt" type="datetime-local" />
         </label>
 
         <div class="detail-actions">
-          <button id="detail-redeem" class="btn btn-primary" type="button">Einlösen</button>
-          <button id="detail-share" class="btn btn-muted" type="button">Teilen</button>
-          <button id="detail-copy" class="btn btn-muted" type="button">Kopieren</button>
-          <button id="detail-request-reactivation" class="btn btn-muted" type="button">Reaktivierung anfragen</button>
+          <button id="detail-redeem" class="btn btn-primary" type="button">Redeem</button>
+          <button id="detail-share" class="btn btn-muted" type="button">Share</button>
+          <button id="detail-copy" class="btn btn-muted" type="button">Copy</button>
+          <button id="detail-request-reactivation" class="btn btn-muted" type="button">Request reactivation</button>
           <a id="detail-steam" class="btn btn-muted" target="_blank" rel="noopener noreferrer">Steam</a>
           <a id="detail-steamdb" class="btn btn-muted" target="_blank" rel="noopener noreferrer">SteamDB</a>
         </div>
 
         <div id="share-link-row" class="share-link-row" hidden>
-          <input id="detail-share-link" type="text" readonly aria-label="Share-Link" />
+          <input id="detail-share-link" type="text" readonly aria-label="Share link" />
           <button id="detail-share-copy" class="btn btn-primary" type="button">Copy Link</button>
         </div>
 
         <div class="admin-edit-actions">
-          <button id="detail-save" class="btn btn-primary" type="submit">Speichern</button>
-          <button id="detail-unredeem" class="btn btn-muted" type="button">Reaktivieren</button>
-          <button id="detail-delete" class="btn btn-danger" type="button">Löschen</button>
+          <button id="detail-save" class="btn btn-primary" type="submit">Save</button>
+          <button id="detail-unredeem" class="btn btn-muted" type="button">Reactivate</button>
+          <button id="detail-delete" class="btn btn-danger" type="button">Delete</button>
         </div>
       </form>
     </div>
   </section>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="/script.js?v=20260620-2"></script>
+  <script src="/script.js?v=20260620-3"></script>
 </body>
 </html>

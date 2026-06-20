@@ -119,7 +119,7 @@ def normalize_username(username):
 def validate_password(password):
     clean = str(password or "")
     if len(clean) < 10 or len(clean) > 200:
-        return "Passwort: bitte 10 bis 200 Zeichen verwenden."
+        return "Password must be 10 to 200 characters."
     return None
 
 
@@ -127,7 +127,7 @@ def validate_credentials(username, password):
     clean_username = normalize_username(username)
     allowed = "abcdefghijklmnopqrstuvwxyz0123456789._-"
     if len(clean_username) < 3 or len(clean_username) > 32 or any(ch not in allowed for ch in clean_username):
-        return "Nutzername: 3-32 Zeichen, erlaubt sind a-z, 0-9, Punkt, Unterstrich und Bindestrich."
+        return "Username must be 3-32 characters and may contain a-z, 0-9, dot, underscore, and hyphen."
     return validate_password(password)
 
 
@@ -219,7 +219,7 @@ def current_user():
 def require_auth():
     user = current_user()
     if not user:
-        return None, (jsonify({"error": "Login erforderlich"}), 401)
+        return None, (jsonify({"error": "Login required"}), 401)
     return user, None
 
 
@@ -228,7 +228,7 @@ def require_admin():
     if error:
         return None, error
     if user.get("role") != "admin":
-        return None, (jsonify({"error": "Adminrechte erforderlich"}), 403)
+        return None, (jsonify({"error": "Admin privileges required"}), 403)
     return user, None
 
 
@@ -293,13 +293,13 @@ def clean_key_entry(data, existing=None):
 
 def validate_key_entry(entry):
     if not entry.get("game"):
-        return "Spielname fehlt."
+        return "Game name is required."
     if not entry.get("key"):
-        return "Steam-Key fehlt."
+        return "Steam key is required."
     if len(entry["game"]) > 180:
-        return "Spielname ist zu lang."
+        return "Game name is too long."
     if len(entry["key"]) > 140:
-        return "Steam-Key ist zu lang."
+        return "Steam key is too long."
     return None
 
 
@@ -328,6 +328,9 @@ def key_fingerprint(key):
 
 
 def public_base_url():
+    configured = (os.environ.get("PUBLIC_BASE_URL") or os.environ.get("APP_BASE_URL") or "").strip().rstrip("/")
+    if configured:
+        return configured
     proto = request.headers.get("X-Forwarded-Proto") or request.scheme
     host = request.headers.get("X-Forwarded-Host") or request.host
     return f"{proto.split(',')[0].strip()}://{host}"
@@ -415,7 +418,7 @@ def auth_register():
     with file_lock:
         data = read_users()
         if any(user.get("username") == username for user in data["users"]):
-            return jsonify({"error": "Dieser Nutzername ist bereits vergeben."}), 409
+            return jsonify({"error": "This username is already taken."}), 409
         first_user = len(data["users"]) == 0
         hashed = hash_password(body.get("password"))
         created = now_iso()
@@ -436,7 +439,7 @@ def auth_register():
     response = make_response(jsonify({
         "ok": True,
         "authenticated": first_user,
-        "message": "Admin-Konto erstellt. Weitere Registrierungen muessen freigegeben werden." if first_user else "Registrierung gespeichert. Ein Admin muss den Zugang freigeben.",
+        "message": "Admin account created. Future registrations must be approved." if first_user else "Registration saved. An admin must approve access.",
         "user": public_user(user),
     }), 201 if first_user else 202)
     if first_user:
@@ -451,11 +454,11 @@ def auth_login():
     password = str(body.get("password") or "")
     user = next((candidate for candidate in read_users()["users"] if candidate.get("username") == username), None)
     if not user or not verify_password(password, user):
-        return jsonify({"error": "Nutzername oder Passwort ist falsch."}), 401
+        return jsonify({"error": "Username or password is incorrect."}), 401
     if user.get("status") == "pending":
-        return jsonify({"error": "Dein Zugang wartet noch auf Admin-Freigabe."}), 403
+        return jsonify({"error": "Your account is waiting for admin approval."}), 403
     if user.get("status") != "approved":
-        return jsonify({"error": "Dieser Zugang ist nicht aktiv."}), 403
+        return jsonify({"error": "This account is not active."}), 403
     response = make_response(jsonify({"ok": True, "user": public_user(user)}))
     return set_session_cookie(response, user)
 
@@ -471,7 +474,7 @@ def password_reset_request():
             if not exists:
                 data["requests"].append({"id": secrets.token_urlsafe(24), "userId": user["id"], "username": user["username"], "status": "pending", "createdAt": now_iso()})
                 write_password_reset_requests(data)
-    return jsonify({"ok": True, "message": "Wenn der Nutzer existiert, wurde eine Passwort-Reset-Anfrage an den Admin gesendet."})
+    return jsonify({"ok": True, "message": "If the user exists, a password reset request was sent to the admin."})
 
 
 @app.post("/api/auth/logout")
@@ -585,7 +588,7 @@ def admin_user_approve(user_id):
         data = read_users()
         user = next((candidate for candidate in data["users"] if candidate.get("id") == user_id), None)
         if not user:
-            return jsonify({"error": "Nutzer nicht gefunden"}), 404
+            return jsonify({"error": "User not found"}), 404
         user["status"] = "approved"
         user["role"] = user.get("role") or "user"
         user["approvedAt"] = now_iso()
@@ -600,12 +603,12 @@ def admin_user_reject(user_id):
     if error:
         return error
     if user_id == admin.get("id"):
-        return jsonify({"error": "Der eigene Admin-Zugang kann nicht abgelehnt werden."}), 400
+        return jsonify({"error": "You cannot reject your own admin account."}), 400
     with file_lock:
         data = read_users()
         user = next((candidate for candidate in data["users"] if candidate.get("id") == user_id), None)
         if not user:
-            return jsonify({"error": "Nutzer nicht gefunden"}), 404
+            return jsonify({"error": "User not found"}), 404
         user["status"] = "rejected"
         user["rejectedAt"] = now_iso()
         user["rejectedBy"] = admin["id"]
@@ -635,13 +638,13 @@ def admin_password_reset_complete(request_id):
         reset_data = read_password_reset_requests()
         reset_request = next((candidate for candidate in reset_data["requests"] if candidate.get("id") == request_id), None)
         if not reset_request:
-            return jsonify({"error": "Passwort-Reset-Anfrage nicht gefunden"}), 404
+            return jsonify({"error": "Password reset request not found"}), 404
         if reset_request.get("status") != "pending":
-            return jsonify({"error": "Anfrage ist bereits erledigt"}), 409
+            return jsonify({"error": "Request has already been resolved"}), 409
         user_data = read_users()
         user = next((candidate for candidate in user_data["users"] if candidate.get("id") == reset_request.get("userId")), None)
         if not user:
-            return jsonify({"error": "Nutzer nicht gefunden"}), 404
+            return jsonify({"error": "User not found"}), 404
         set_user_password(user, body.get("password"), admin["id"])
         reset_request["status"] = "completed"
         reset_request["resolvedAt"] = now_iso()
@@ -660,9 +663,9 @@ def admin_password_reset_reject(request_id):
         data = read_password_reset_requests()
         reset_request = next((candidate for candidate in data["requests"] if candidate.get("id") == request_id), None)
         if not reset_request:
-            return jsonify({"error": "Passwort-Reset-Anfrage nicht gefunden"}), 404
+            return jsonify({"error": "Password reset request not found"}), 404
         if reset_request.get("status") != "pending":
-            return jsonify({"error": "Anfrage ist bereits erledigt"}), 409
+            return jsonify({"error": "Request has already been resolved"}), 409
         reset_request["status"] = "rejected"
         reset_request["resolvedAt"] = now_iso()
         reset_request["resolvedBy"] = admin["id"]
@@ -687,10 +690,10 @@ def api_key_secret(index):
         return error
     keys = read_keys()
     if index < 0 or index >= len(keys):
-        return jsonify({"error": "Key nicht gefunden"}), 404
+        return jsonify({"error": "Key not found"}), 404
     entry = keys[index]
     if not entry.get("key"):
-        return jsonify({"error": "Diese Zeile enthält keinen Key"}), 422
+        return jsonify({"error": "This row does not contain a key"}), 422
     return jsonify({"ok": True, "key": entry["key"], "redeemUrl": steam_redeem_url(entry["key"])})
 
 
@@ -701,10 +704,10 @@ def api_key_share(index):
         return error
     keys = read_keys()
     if index < 0 or index >= len(keys):
-        return jsonify({"error": "Key nicht gefunden"}), 404
+        return jsonify({"error": "Key not found"}), 404
     entry = keys[index]
     if not entry.get("key"):
-        return jsonify({"error": "Diese Zeile enthält keinen Key"}), 422
+        return jsonify({"error": "This row does not contain a key"}), 422
     token = share_token_for_key(entry["key"])
     return jsonify({"ok": True, "token": token, "shareUrl": f"{public_base_url()}/share/{quote(token)}"})
 
@@ -716,16 +719,16 @@ def api_key_reactivation_request(index):
         return error
     keys = read_keys()
     if index < 0 or index >= len(keys):
-        return jsonify({"error": "Key nicht gefunden"}), 404
+        return jsonify({"error": "Key not found"}), 404
     entry = keys[index]
     if not entry.get("redeemedAt"):
-        return jsonify({"error": "Key ist bereits frei"}), 409
+        return jsonify({"error": "Key is already free"}), 409
     fingerprint = key_fingerprint(entry.get("key", ""))
     with file_lock:
         data = read_reactivation_requests()
         exists = any(req.get("status") == "pending" and safe_equal(req.get("keyFingerprint", ""), fingerprint) for req in data["requests"])
         if exists:
-            return jsonify({"error": "Für diesen Key gibt es bereits eine offene Anfrage."}), 409
+            return jsonify({"error": "There is already a pending request for this key."}), 409
         req = {
             "id": secrets.token_urlsafe(24),
             "index": index,
@@ -750,13 +753,13 @@ def admin_reactivation_approve(request_id):
         data = read_reactivation_requests()
         req = next((candidate for candidate in data["requests"] if candidate.get("id") == request_id), None)
         if not req:
-            return jsonify({"error": "Anfrage nicht gefunden"}), 404
+            return jsonify({"error": "Request not found"}), 404
         if req.get("status") != "pending":
-            return jsonify({"error": "Anfrage ist bereits erledigt"}), 409
+            return jsonify({"error": "Request has already been resolved"}), 409
         keys = read_keys()
         index, entry = find_key_by_request(keys, req)
         if entry is None:
-            return jsonify({"error": "Key zur Anfrage wurde nicht gefunden"}), 404
+            return jsonify({"error": "Key for this request was not found"}), 404
         keys[index] = {**entry, "redeemedAt": ""}
         req["status"] = "approved"
         req["resolvedAt"] = now_iso()
@@ -776,9 +779,9 @@ def admin_reactivation_reject(request_id):
         data = read_reactivation_requests()
         req = next((candidate for candidate in data["requests"] if candidate.get("id") == request_id), None)
         if not req:
-            return jsonify({"error": "Anfrage nicht gefunden"}), 404
+            return jsonify({"error": "Request not found"}), 404
         if req.get("status") != "pending":
-            return jsonify({"error": "Anfrage ist bereits erledigt"}), 409
+            return jsonify({"error": "Request has already been resolved"}), 409
         req["status"] = "rejected"
         req["resolvedAt"] = now_iso()
         req["resolvedBy"] = admin["id"]
@@ -811,7 +814,7 @@ def admin_key_update(index):
     with file_lock:
         keys = read_keys()
         if index < 0 or index >= len(keys):
-            return jsonify({"error": "Key nicht gefunden"}), 404
+            return jsonify({"error": "Key not found"}), 404
         entry = clean_key_entry(json_body(), keys[index])
         error_text = validate_key_entry(entry)
         if error_text:
@@ -829,7 +832,7 @@ def admin_key_delete(index):
     with file_lock:
         keys = read_keys()
         if index < 0 or index >= len(keys):
-            return jsonify({"error": "Key nicht gefunden"}), 404
+            return jsonify({"error": "Key not found"}), 404
         removed = keys.pop(index)
         write_keys(keys)
     return jsonify({"ok": True, "removed": public_key(removed, index)})
@@ -843,12 +846,12 @@ def api_redeem(index):
     with file_lock:
         keys = read_keys()
         if index < 0 or index >= len(keys):
-            return jsonify({"error": "Key nicht gefunden"}), 404
+            return jsonify({"error": "Key not found"}), 404
         entry = keys[index]
         if entry.get("redeemedAt"):
-            return jsonify({"error": "Key ist bereits eingelöst"}), 409
+            return jsonify({"error": "Key is already used"}), 409
         if not entry.get("key"):
-            return jsonify({"error": "Diese Zeile enthält keinen Key"}), 422
+            return jsonify({"error": "This row does not contain a key"}), 422
         redeemed_at = now_iso()
         keys[index] = {**entry, "redeemedAt": redeemed_at}
         write_keys(keys)
@@ -863,10 +866,10 @@ def api_unredeem(index):
     with file_lock:
         keys = read_keys()
         if index < 0 or index >= len(keys):
-            return jsonify({"error": "Key nicht gefunden"}), 404
+            return jsonify({"error": "Key not found"}), 404
         entry = keys[index]
         if not entry.get("redeemedAt"):
-            return jsonify({"error": "Key ist nicht eingelöst"}), 409
+            return jsonify({"error": "Key is not used"}), 409
         keys[index] = {**entry, "redeemedAt": ""}
         write_keys(keys)
     return jsonify({"ok": True, "index": index, "game": entry.get("game")})
@@ -876,7 +879,7 @@ def api_unredeem(index):
 def api_share(token):
     found = next((entry for entry in read_keys() if entry.get("key") and safe_equal(share_token_for_key(entry["key"]), token)), None)
     if not found:
-        return jsonify({"error": "Share-Link nicht gefunden"}), 404
+        return jsonify({"error": "Share link not found"}), 404
     response = jsonify({
         "ok": True,
         "game": found.get("game"),

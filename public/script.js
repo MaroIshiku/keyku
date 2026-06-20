@@ -89,10 +89,10 @@ if (missingElements.length) {
     <main class="auth-shell">
       <section class="auth-panel">
         <div class="brand brand-auth"><img class="brand-logo" src="/logo.svg?v=20260620-1" alt="" /><span>Steam Key Vault</span></div>
-        <p class="auth-kicker">Frontend-Dateien nicht synchron</p>
-        <h1>Bitte neu laden</h1>
-        <p class="auth-copy">HTML und JavaScript passen gerade nicht zusammen. Leere den Browser-Cache oder starte den Container neu.</p>
-        <p class="auth-message">Fehlende Elemente: ${missingElements.map(escapeHtml).join(", ")}</p>
+        <p class="auth-kicker">Frontend files out of sync</p>
+        <h1>Please reload</h1>
+        <p class="auth-copy">HTML and JavaScript are out of sync. Clear the browser cache or restart the container.</p>
+        <p class="auth-message">Missing elements: ${missingElements.map(escapeHtml).join(", ")}</p>
       </section>
     </main>
   `);
@@ -120,8 +120,8 @@ function preferredTheme() {
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
   localStorage.setItem(themeStorageKey, theme);
-  themeToggle.setAttribute("aria-label", theme === "light" ? "Dunkelmodus aktivieren" : "Hellmodus aktivieren");
-  themeToggle.title = theme === "light" ? "Dunkelmodus aktivieren" : "Hellmodus aktivieren";
+  themeToggle.setAttribute("aria-label", theme === "light" ? "Enable dark mode" : "Enable light mode");
+  themeToggle.title = theme === "light" ? "Enable dark mode" : "Enable light mode";
 }
 
 function updateNotificationIndicator(count) {
@@ -156,7 +156,7 @@ function formatDate(iso) {
   if (!iso) return "";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
+  return date.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function toDateTimeLocal(iso) {
@@ -203,7 +203,7 @@ async function api(path, options = {}) {
   const data = await readJsonResponse(response);
   if (response.status === 401 && path !== "/api/auth/me") {
     await showAuth();
-    throw new Error(data.error || "Login erforderlich");
+    throw new Error(data.error || "Login required");
   }
   if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
   return data;
@@ -212,12 +212,12 @@ async function api(path, options = {}) {
 function setAuthMode(nextMode) {
   authMode = nextMode;
   const isRegister = authMode === "register";
-  authTitle.textContent = isRegister ? "Registrieren" : "Einloggen";
+  authTitle.textContent = isRegister ? "Register" : "Sign in";
   authCopy.textContent = isRegister
-    ? "Der erste Nutzer wird Admin. Danach muss der Admin neue Registrierungen freigeben."
-    : "Melde dich an, um die gemeinsame Key-Liste zu sehen.";
-  authSubmit.textContent = isRegister ? "Registrierung senden" : "Einloggen";
-  authSwitch.textContent = isRegister ? "Schon freigegeben? Einloggen" : "Noch keinen Zugang? Registrieren";
+    ? "The first user becomes admin. After that, admins must approve new registrations."
+    : "Sign in to access the shared key vault.";
+  authSubmit.textContent = isRegister ? "Submit registration" : "Sign in";
+  authSwitch.textContent = isRegister ? "Already approved? Sign in" : "Need access? Register";
   passwordResetRequest.hidden = isRegister;
   authPassword.autocomplete = isRegister ? "new-password" : "current-password";
   authMessage.textContent = "";
@@ -236,7 +236,7 @@ function showApp(user, meta = {}) {
   pendingCount = Number(meta.notificationCount || meta.pendingCount || 0);
   authView.hidden = true;
   appView.hidden = false;
-  userPill.textContent = `${user.username}${user.role === "admin" ? " · Admin" : ""}`;
+  userPill.textContent = `${user.username}${user.role === "admin" ? " - Admin" : ""}`;
   adminOpen.hidden = user.role !== "admin";
   settingsOpen.hidden = user.role !== "admin";
   newKeyBtn.hidden = user.role !== "admin";
@@ -254,7 +254,7 @@ async function initAuth() {
     }
   } catch (error) {
     console.error(error);
-    showAuth("Server nicht erreichbar.");
+    showAuth("Server is unreachable.");
   }
 }
 
@@ -265,7 +265,7 @@ authSwitch.addEventListener("click", () => {
 passwordResetRequest.addEventListener("click", async () => {
   const username = authUsername.value.trim();
   if (!username) {
-    authMessage.textContent = "Bitte Nutzernamen eintragen.";
+    authMessage.textContent = "Enter a username first.";
     authUsername.focus();
     return;
   }
@@ -277,7 +277,7 @@ passwordResetRequest.addEventListener("click", async () => {
       body: JSON.stringify({ username }),
     });
     authPassword.value = "";
-    authMessage.textContent = data.message || "Anfrage wurde an den Admin gesendet.";
+    authMessage.textContent = data.message || "Request sent to the admin.";
   } catch (error) {
     authMessage.textContent = error.message;
   } finally {
@@ -302,10 +302,10 @@ authForm.addEventListener("submit", async (event) => {
       showApp(data.user, data);
       authForm.reset();
       await loadKeys();
-      showToast(authMode === "register" ? "Admin-Konto erstellt" : "Willkommen zurück", "success");
+      showToast(authMode === "register" ? "Admin account created" : "Welcome back", "success");
     } else {
       setAuthMode("login");
-      authMessage.textContent = data.message || "Registrierung gespeichert. Bitte auf Freigabe warten.";
+      authMessage.textContent = data.message || "Registration saved. Please wait for approval.";
       authPassword.value = "";
     }
   } catch (error) {
@@ -333,7 +333,7 @@ function sortedKeys(keys) {
   };
   switch (sortMode) {
     case "name-desc":
-      return copy.sort((a, b) => b.game.localeCompare(a.game, "de", { sensitivity: "base", numeric: true }));
+      return copy.sort((a, b) => b.game.localeCompare(a.game, "en", { sensitivity: "base", numeric: true }));
     case "added-desc":
       return copy.sort((a, b) => addedTime(b) - addedTime(a) || a.index - b.index);
     case "status-available":
@@ -341,20 +341,20 @@ function sortedKeys(keys) {
     case "status-claimed":
       return copy.sort((a, b) => Number(b.redeemed) - Number(a.redeemed) || a.index - b.index);
     default:
-      return copy.sort((a, b) => a.game.localeCompare(b.game, "de", { sensitivity: "base", numeric: true }));
+      return copy.sort((a, b) => a.game.localeCompare(b.game, "en", { sensitivity: "base", numeric: true }));
   }
 }
 
 function renderKeys() {
   const available = allKeys.filter((entry) => !entry.redeemed).length;
   const claimed = allKeys.length - available;
-  heroSub.textContent = `${available} verfügbar · ${claimed} eingelöst · ${allKeys.length} insgesamt`;
+  heroSub.textContent = `${available} free - ${claimed} used - ${allKeys.length} total`;
   counts.all.textContent = String(allKeys.length);
   counts.available.textContent = String(available);
   counts.claimed.textContent = String(claimed);
 
   if (!allKeys.length) {
-    rows.innerHTML = '<li class="placeholder">Die gemeinsame Liste ist leer. Füge Keys in <code>data/keys.csv</code> hinzu oder lege sie als Admin hier an.</li>';
+    rows.innerHTML = '<li class="placeholder">The shared vault is empty. Add keys in <code>data/keys.csv</code> or create them here as an admin.</li>';
     return;
   }
 
@@ -366,28 +366,28 @@ function renderKeys() {
   if (query) visible = visible.filter((entry) => normalize(entry.game).includes(query));
 
   if (!visible.length) {
-    rows.innerHTML = '<li class="placeholder">Keine passenden Einträge gefunden.</li>';
+    rows.innerHTML = '<li class="placeholder">No matching entries found.</li>';
     return;
   }
 
   rows.innerHTML = visible.map((entry) => {
-    const status = entry.redeemed ? "Verbraucht" : "Frei";
+    const status = entry.redeemed ? "Used" : "Free";
     const statusClass = entry.redeemed ? "is-claimed" : "is-free";
     const dateLine = entry.redeemed && entry.redeemedAt
-      ? `eingelöst ${formatDate(entry.redeemedAt)}`
-      : (entry.addedAt ? `hinzugefügt ${formatDate(entry.addedAt)}` : "");
+      ? `redeemed ${formatDate(entry.redeemedAt)}`
+      : (entry.addedAt ? `added ${formatDate(entry.addedAt)}` : "");
     const action = entry.redeemed
-      ? `<button class="btn btn-muted" type="button" data-open="${entry.index}">Öffnen</button>`
-      : `<button class="btn btn-primary" type="button" data-redeem="${entry.index}">Einlösen</button>`;
+      ? `<button class="btn btn-muted" type="button" data-open="${entry.index}">Open</button>`
+      : `<button class="btn btn-primary" type="button" data-redeem="${entry.index}">Redeem</button>`;
 
     return `
       <li class="row ${entry.redeemed ? "row-claimed" : ""}" data-row-index="${entry.index}" tabindex="0">
         <span class="row-index">${String(entry.index + 1).padStart(2, "0")}</span>
         <span class="row-game">
-          <strong>${escapeHtml(entry.game || "Unbenannt")}</strong>
+          <strong>${escapeHtml(entry.game || "Untitled")}</strong>
           ${dateLine ? `<small>${escapeHtml(dateLine)}</small>` : ""}
         </span>
-        <span class="row-key" aria-label="Key verborgen">•••••-•••••-•••••</span>
+        <span class="row-key" aria-label="Key hidden">*****-*****-*****</span>
         <span class="status ${statusClass}">${status}</span>
         <span class="row-actions">${action}</span>
       </li>
@@ -396,46 +396,46 @@ function renderKeys() {
 }
 
 async function loadKeys() {
-  rows.innerHTML = '<li class="placeholder">Lade Vault...</li>';
+  rows.innerHTML = '<li class="placeholder">Loading vault...</li>';
   try {
     const data = await api("/api/keys");
     allKeys = data.keys || [];
     renderKeys();
   } catch (error) {
     console.error(error);
-    rows.innerHTML = `<li class="placeholder error">${escapeHtml(error.message || "Vault nicht erreichbar")}</li>`;
+    rows.innerHTML = `<li class="placeholder error">${escapeHtml(error.message || "Vault is unreachable")}</li>`;
   }
 }
 
 async function redeem(index, button) {
   button.disabled = true;
   const original = button.textContent;
-  button.textContent = "Öffne...";
+  button.textContent = "Opening...";
   try {
     const data = await api(`/api/redeem/${encodeURIComponent(index)}`, { method: "POST", body: "{}" });
     if (data.redeemUrl) window.open(data.redeemUrl, "_blank", "noopener,noreferrer");
-    showToast("Key markiert und Steam geöffnet", "success");
+    showToast("Key marked as used and Steam opened", "success");
     await loadKeys();
     if (!detailPanel.hidden && activeIndex === index) openDetail(index);
   } catch (error) {
-    showToast(error.message || "Einlösen fehlgeschlagen", "error");
+    showToast(error.message || "Redeem failed", "error");
     button.disabled = false;
     button.textContent = original;
   }
 }
 
 async function unredeem(index, button) {
-  if (!window.confirm("Diesen Key wieder als frei markieren?")) return;
+  if (!window.confirm("Mark this key as free again?")) return;
   button.disabled = true;
   const original = button.textContent;
-  button.textContent = "Speichere...";
+  button.textContent = "Saving...";
   try {
     await api(`/api/unredeem/${encodeURIComponent(index)}`, { method: "POST", body: "{}" });
-    showToast("Key ist wieder frei", "success");
+    showToast("Key is free again", "success");
     await loadKeys();
     openDetail(index);
   } catch (error) {
-    showToast(error.message || "Reaktivieren fehlgeschlagen", "error");
+    showToast(error.message || "Reactivate failed", "error");
     button.disabled = false;
     button.textContent = original;
   }
@@ -444,7 +444,7 @@ async function unredeem(index, button) {
 async function revealActiveKey() {
   if (isCreating) {
     detailKey.type = detailKey.type === "password" ? "text" : "password";
-    detailReveal.textContent = detailKey.type === "password" ? "Anzeigen" : "Verbergen";
+    detailReveal.textContent = detailKey.type === "password" ? "Reveal" : "Hide";
     return detailKey.value;
   }
   if (activeIndex == null) return "";
@@ -454,7 +454,7 @@ async function revealActiveKey() {
     detailKey.value = activeSecret;
   }
   detailKey.type = "text";
-  detailReveal.textContent = "Verbergen";
+  detailReveal.textContent = "Hide";
   detailCopy.disabled = !activeSecret;
   return activeSecret;
 }
@@ -477,8 +477,8 @@ function openNewKey() {
   isCreating = true;
   activeIndex = null;
   activeSecret = "";
-  detailStatus.textContent = "Neuer Eintrag";
-  detailTitle.textContent = "Neuer Key";
+  detailStatus.textContent = "New entry";
+  detailTitle.textContent = "New key";
   detailGame.value = "";
   detailKey.value = "";
   detailKey.type = "text";
@@ -492,7 +492,7 @@ function openNewKey() {
   detailCopy.disabled = false;
   shareLinkRow.hidden = true;
   detailShareLink.value = "";
-  detailReveal.textContent = "Verbergen";
+  detailReveal.textContent = "Hide";
   detailSteam.href = steamSearchUrl("");
   detailSteamDb.href = steamDbUrl("");
   setDetailReadonly(false);
@@ -506,14 +506,14 @@ function openDetail(index) {
   isCreating = false;
   activeIndex = index;
   activeSecret = "";
-  detailStatus.textContent = entry.redeemed ? "Verbraucht" : "Frei";
-  detailTitle.textContent = entry.game || "Unbenannt";
+  detailStatus.textContent = entry.redeemed ? "Used" : "Free";
+  detailTitle.textContent = entry.game || "Untitled";
   detailGame.value = entry.game || "";
-  detailKey.value = "•••••-•••••-•••••";
+  detailKey.value = "*****-*****-*****";
   detailKey.type = "password";
   detailAdded.value = toDateTimeLocal(entry.addedAt);
   detailRedeemed.value = toDateTimeLocal(entry.redeemedAt);
-  detailReveal.textContent = "Anzeigen";
+  detailReveal.textContent = "Reveal";
   detailRedeem.hidden = entry.redeemed;
   detailUnredeem.hidden = !entry.redeemed;
   detailDelete.hidden = currentUser?.role !== "admin";
@@ -558,7 +558,7 @@ async function copyText(text, successMessage) {
     textarea.setSelectionRange(0, textarea.value.length);
     const copied = document.execCommand && document.execCommand("copy");
     textarea.remove();
-    showToast(copied ? successMessage : "Kopieren nicht möglich: bitte manuell markieren.", copied ? "success" : "error");
+    showToast(copied ? successMessage : "Copy failed: select the text manually.", copied ? "success" : "error");
     return Boolean(copied);
   }
 }
@@ -595,28 +595,28 @@ detailPanel.addEventListener("click", (event) => {
 detailReveal.addEventListener("click", async () => {
   if (detailKey.type === "text" && !isCreating) {
     detailKey.type = "password";
-    detailKey.value = "•••••-•••••-•••••";
-    detailReveal.textContent = "Anzeigen";
+    detailKey.value = "*****-*****-*****";
+    detailReveal.textContent = "Reveal";
     return;
   }
   if (detailKey.type === "text" && isCreating) {
     detailKey.type = "password";
-    detailReveal.textContent = "Anzeigen";
+    detailReveal.textContent = "Reveal";
     return;
   }
   try {
     await revealActiveKey();
   } catch (error) {
-    showToast(error.message || "Key konnte nicht angezeigt werden", "error");
+    showToast(error.message || "Could not reveal key", "error");
   }
 });
 
 detailCopy.addEventListener("click", async () => {
   try {
     const key = await revealActiveKey();
-    if (key) await copyText(key, "Schlüssel kopiert");
+    if (key) await copyText(key, "Key copied");
   } catch (error) {
-    showToast(error.message || "Kopieren fehlgeschlagen", "error");
+    showToast(error.message || "Copy failed", "error");
   }
 });
 
@@ -629,16 +629,16 @@ detailShare.addEventListener("click", async () => {
     shareLinkRow.hidden = false;
     detailShareLink.focus();
     detailShareLink.select();
-    showToast("Share-Link erstellt", "success");
+    showToast("Share link created", "success");
   } catch (error) {
-    showToast(error.message || "Share-Link fehlgeschlagen", "error");
+    showToast(error.message || "Share link failed", "error");
   } finally {
     detailShare.disabled = false;
   }
 });
 
 detailShareCopy.addEventListener("click", async () => {
-  await copyText(detailShareLink.value, "Share-Link kopiert");
+  await copyText(detailShareLink.value, "Share link copied");
 });
 
 detailRedeem.addEventListener("click", () => {
@@ -656,9 +656,9 @@ detailRequestReactivation.addEventListener("click", async () => {
   detailRequestReactivation.disabled = true;
   try {
     await api(`/api/keys/${encodeURIComponent(activeIndex)}/reactivation-request`, { method: "POST", body: "{}" });
-    showToast("Reaktivierung wurde beim Admin angemeldet", "success");
+    showToast("Reactivation request sent to the admin", "success");
   } catch (error) {
-    showToast(error.message || "Anfrage fehlgeschlagen", "error");
+    showToast(error.message || "Request failed", "error");
   } finally {
     detailRequestReactivation.disabled = false;
   }
@@ -667,15 +667,15 @@ detailRequestReactivation.addEventListener("click", async () => {
 detailDelete.addEventListener("click", async () => {
   if (activeIndex == null) return;
   const entry = currentEntry();
-  if (!window.confirm(`Eintrag "${entry?.game || "Unbenannt"}" wirklich löschen?`)) return;
+  if (!window.confirm(`Delete entry "${entry?.game || "Untitled"}" permanently?`)) return;
   detailDelete.disabled = true;
   try {
     await api(`/api/admin/keys/${encodeURIComponent(activeIndex)}`, { method: "DELETE" });
-    showToast("Eintrag gelöscht", "success");
+    showToast("Entry deleted", "success");
     closeDetail();
     await loadKeys();
   } catch (error) {
-    showToast(error.message || "Löschen fehlgeschlagen", "error");
+    showToast(error.message || "Delete failed", "error");
   } finally {
     detailDelete.disabled = false;
   }
@@ -691,17 +691,17 @@ keyForm.addEventListener("submit", async (event) => {
       addedAt: fromDateTimeLocal(detailAdded.value),
       redeemedAt: fromDateTimeLocal(detailRedeemed.value),
     };
-    if (isCreating || activeSecret || !detailKey.value.includes("•")) {
+    if (isCreating || activeSecret || detailKey.value !== "*****-*****-*****") {
       body.key = detailKey.value.trim();
     }
     const path = isCreating ? "/api/admin/keys" : `/api/admin/keys/${encodeURIComponent(activeIndex)}`;
     const method = isCreating ? "POST" : "PATCH";
     const data = await api(path, { method, body: JSON.stringify(body) });
-    showToast(isCreating ? "Eintrag angelegt" : "Eintrag gespeichert", "success");
+    showToast(isCreating ? "Entry created" : "Entry saved", "success");
     await loadKeys();
     openDetail(data.key.index);
   } catch (error) {
-    showToast(error.message || "Speichern fehlgeschlagen", "error");
+    showToast(error.message || "Save failed", "error");
   } finally {
     detailSave.disabled = false;
   }
@@ -709,7 +709,7 @@ keyForm.addEventListener("submit", async (event) => {
 
 detailGame.addEventListener("input", () => {
   const game = detailGame.value;
-  detailTitle.textContent = game || (isCreating ? "Neuer Key" : "Eintrag");
+  detailTitle.textContent = game || (isCreating ? "New key" : "Entry");
   detailSteam.href = steamSearchUrl(game);
   detailSteamDb.href = steamDbUrl(game);
 });
@@ -771,7 +771,7 @@ function renderSettings(data) {
 }
 
 async function loadAdminSettings() {
-  settingsBody.innerHTML = '<div class="placeholder">Lade Settings...</div>';
+  settingsBody.innerHTML = '<div class="placeholder">Loading settings...</div>';
   try {
     const data = await api("/api/admin/settings");
     renderSettings(data);
@@ -794,11 +794,11 @@ settingsPanel.addEventListener("click", async (event) => {
   if (!actionButton) return;
   const action = actionButton.dataset.settingAction;
   const messages = {
-    "delete-used": "Alle benutzten Keys endgültig löschen?",
-    "reactivate-used": "Alle benutzten Keys wieder als frei markieren?",
-    "clear-resolved": "Alle erledigten Anfragen aus der Historie entfernen?",
+    "delete-used": "Permanently delete all used keys?",
+    "reactivate-used": "Mark all used keys as free again?",
+    "clear-resolved": "Clear all resolved requests from history?",
   };
-  if (!window.confirm(messages[action] || "Aktion ausführen?")) return;
+  if (!window.confirm(messages[action] || "Run this action?")) return;
   const paths = {
     "delete-used": "/api/admin/maintenance/delete-used-keys",
     "reactivate-used": "/api/admin/maintenance/reactivate-used-keys",
@@ -809,9 +809,9 @@ settingsPanel.addEventListener("click", async (event) => {
     const result = await api(paths[action], { method: "POST", body: "{}" });
     if (result.summary) renderSettings(result.summary);
     await loadKeys();
-    showToast("Settings aktualisiert", "success");
+    showToast("Settings updated", "success");
   } catch (error) {
-    showToast(error.message || "Aktion fehlgeschlagen", "error");
+    showToast(error.message || "Action failed", "error");
   } finally {
     actionButton.disabled = false;
   }
@@ -848,41 +848,41 @@ function renderNotifications(data) {
     <li class="admin-user">
       <div>
         <strong>${escapeHtml(user.username)}</strong>
-        <small>${escapeHtml(user.role)} · registriert ${formatDate(user.createdAt)}</small>
+        <small>${escapeHtml(user.role)} - registered ${formatDate(user.createdAt)}</small>
       </div>
       <div class="admin-actions">
-        <button class="btn btn-primary" type="button" data-approve="${user.id}">Annehmen</button>
-        <button class="btn btn-danger" type="button" data-reject="${user.id}">Ablehnen</button>
+        <button class="btn btn-primary" type="button" data-approve="${user.id}">Approve</button>
+        <button class="btn btn-danger" type="button" data-reject="${user.id}">Reject</button>
       </div>
     </li>
-  `).join("") : emptyNotice("Keine neuen Nutzerregistrierungen.");
+  `).join("") : emptyNotice("No new user registrations.");
 
   const requestHtml = reactivationRequests.length ? reactivationRequests.map((request) => `
     <li class="admin-user">
       <div>
-        <strong>${escapeHtml(request.game || "Unbenannter Key")}</strong>
-        <small>angefragt von ${escapeHtml(request.requestedByName || "unbekannt")} · ${formatDate(request.createdAt)}</small>
+        <strong>${escapeHtml(request.game || "Untitled key")}</strong>
+        <small>requested by ${escapeHtml(request.requestedByName || "unknown")} - ${formatDate(request.createdAt)}</small>
       </div>
       <div class="admin-actions">
-        <button class="btn btn-primary" type="button" data-reactivation-approve="${request.id}">Freigeben</button>
-        <button class="btn btn-danger" type="button" data-reactivation-reject="${request.id}">Ablehnen</button>
+        <button class="btn btn-primary" type="button" data-reactivation-approve="${request.id}">Approve</button>
+        <button class="btn btn-danger" type="button" data-reactivation-reject="${request.id}">Reject</button>
       </div>
     </li>
-  `).join("") : emptyNotice("Keine offenen Reaktivierungsanfragen.");
+  `).join("") : emptyNotice("No pending reactivation requests.");
 
   const passwordResetHtml = passwordResetRequests.length ? passwordResetRequests.map((request) => `
     <li class="admin-user admin-user-reset">
       <div>
         <strong>${escapeHtml(request.username)}</strong>
-        <small>angefragt ${formatDate(request.createdAt)}</small>
+        <small>requested ${formatDate(request.createdAt)}</small>
       </div>
       <div class="password-reset-row">
-        <input type="password" placeholder="Neues Passwort" minlength="10" data-password-input="${request.id}" />
-        <button class="btn btn-primary" type="button" data-password-complete="${request.id}">Setzen</button>
-        <button class="btn btn-danger" type="button" data-password-reject="${request.id}">Ablehnen</button>
+        <input type="password" placeholder="New password" minlength="10" data-password-input="${request.id}" />
+        <button class="btn btn-primary" type="button" data-password-complete="${request.id}">Set</button>
+        <button class="btn btn-danger" type="button" data-password-reject="${request.id}">Reject</button>
       </div>
     </li>
-  `).join("") : emptyNotice("Keine offenen Passwort-Reset-Anfragen.");
+  `).join("") : emptyNotice("No pending password reset requests.");
 
   adminUsers.innerHTML = `
     <section class="notification-section">
@@ -901,7 +901,7 @@ function renderNotifications(data) {
 }
 
 async function loadNotifications() {
-  adminUsers.innerHTML = '<div class="placeholder">Lade Notifications...</div>';
+  adminUsers.innerHTML = '<div class="placeholder">Loading notifications...</div>';
   try {
     const data = await api("/api/admin/notifications");
     renderNotifications(data);
@@ -943,7 +943,7 @@ adminPanel.addEventListener("click", async (event) => {
         body: passwordComplete ? JSON.stringify({ password }) : "{}",
       });
       if (input) input.value = "";
-      showToast(passwordComplete ? "Passwort wurde neu gesetzt" : "Reset-Anfrage abgelehnt", "success");
+      showToast(passwordComplete ? "Password has been reset" : "Password reset request rejected", "success");
     } else {
       const path = approve
         ? `/api/admin/users/${encodeURIComponent(approve.dataset.approve)}/approve`
@@ -953,7 +953,7 @@ adminPanel.addEventListener("click", async (event) => {
             ? `/api/admin/reactivation-requests/${encodeURIComponent(reactApprove.dataset.reactivationApprove)}/approve`
             : `/api/admin/reactivation-requests/${encodeURIComponent(reactReject.dataset.reactivationReject)}/reject`;
       await api(path, { method: "POST", body: "{}" });
-      showToast(approve || reactApprove ? "Freigegeben" : "Abgelehnt", "success");
+      showToast(approve || reactApprove ? "Approved" : "Rejected", "success");
       if (reactApprove) await loadKeys();
     }
     await loadNotifications();
