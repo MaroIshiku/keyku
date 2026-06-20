@@ -4,9 +4,7 @@
 
 services:
   steam-keys:
-    build:
-      context: .
-      dockerfile: python/Dockerfile
+    image: ghcr.io/maroishiku/ish-keyvault:latest
     container_name: steam-keys
     restart: unless-stopped
     working_dir: /app

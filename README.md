@@ -54,7 +54,8 @@ Dead Cells,DDDDD-EEEEE-FFFFF,,
 
 ```bash
 cd /DATA/AppData/ish-keyvault
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
 Aufruf:
@@ -64,6 +65,12 @@ http://<zima-ip>:8080
 ```
 
 Wenn ein HTTPS-Host oder Reverse Proxy davor sitzt, leite ihn auf `http://<zima-ip>:8080` weiter. Nginx reicht `X-Forwarded-Proto` an Flask weiter, damit Secure-Cookies bei HTTPS korrekt funktionieren.
+
+Das Compose-File nutzt das fertige GHCR-Image:
+
+```text
+ghcr.io/maroishiku/ish-keyvault:latest
+```
 
 ## Erster Login
 
