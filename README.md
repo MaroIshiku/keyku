@@ -42,7 +42,7 @@ The shared themes are Lavender, Mint, Sky, Amber, Rose, and Graphite. System, li
 For ZimaOS, the main Compose file uses absolute host paths:
 
 ```bash
-mkdir -p /DATA/AppData/keyku/data
+mkdir -p /DATA/AppData/ish_keyku/data
 docker compose pull
 docker compose up -d
 ```
@@ -50,7 +50,7 @@ docker compose up -d
 Before the first start, edit `docker-compose.yml` and replace:
 
 ```yaml
-- ISHIKU_SETUP_SECRET=replace-with-a-long-random-setup-secret
+- ISHIKU_SETUP_SECRET=
 ```
 
 with a long random setup secret of your own.
@@ -58,7 +58,7 @@ with a long random setup secret of your own.
 The app is available at:
 
 ```text
-http://<server-ip>:8080
+http://<server-ip>:8186
 ```
 
 ### First Start

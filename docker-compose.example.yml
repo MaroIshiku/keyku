@@ -1,10 +1,10 @@
 services:
-  keyku:
+  Keyku:
     image: ghcr.io/maroishiku/keyku:latest
-    container_name: keyku
+    container_name: Keyku
     restart: unless-stopped
     ports:
-      - "8080:3000"
+      - "8186:3000"
     environment:
       TZ: "Europe/Berlin"
       ISHIKU_APP_URL: "https://keyku.example.local"
@@ -12,7 +12,7 @@ services:
       ISHIKU_DATA_DIR: "/data"
       ISHIKU_LOG_LEVEL: "info"
       ISHIKU_TRUST_PROXY: "false"
-      ISHIKU_SETUP_SECRET: "replace-with-a-long-random-setup-secret"
+      ISHIKU_SETUP_SECRET: ""
       PORT: "3000"
       PUBLIC_DIR: "/app/public"
       # Optional hardened alternative:

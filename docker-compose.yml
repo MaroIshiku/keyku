@@ -1,41 +1,127 @@
-# ZimaOS optimized compose for Keyku.
-# Uses the prebuilt GHCR image and stores persistent data below /DATA/AppData/keyku.
-
+name: keyku-keyvault
 services:
-  keyku:
-    image: ghcr.io/maroishiku/keyku:latest
-    container_name: keyku
-    restart: unless-stopped
-    pull_policy: always
-    init: true
-
-    ports:
-      - "8080:3000"
-
-    volumes:
-      - /DATA/AppData/keyku/data:/data
-
+  Keyku:
+    cap_drop:
+      - ALL
+    cpus: 0.5
+    cpu_shares: 90
+    command: []
+    container_name: Keyku
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "134217728"
+          pids: 128
+        reservations:
+          devices: []
     environment:
-      - TZ=Europe/Berlin
       - ISHIKU_APP_URL=
       - ISHIKU_BASE_PATH=/
       - ISHIKU_DATA_DIR=/data
       - ISHIKU_LOG_LEVEL=info
+      - ISHIKU_SETUP_SECRET=
       - ISHIKU_TRUST_PROXY=false
-      # Simple setup path: set a long random secret here before first start.
-      - ISHIKU_SETUP_SECRET=replace-with-a-long-random-setup-secret
       - PORT=3000
       - PUBLIC_DIR=/app/public
-
+      - TZ=Europe/Berlin
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3000/healthz', timeout=3).read()"]
-      interval: 30s
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:3000/readyz',
+          timeout=3).read()
       timeout: 5s
-      retries: 5
-      start_period: 20s
-
+      interval: 30s
+      retries: 3
+      start_period: 10s
+    hostname: Keyku
+    image: ghcr.io/maroishiku/keyku:latest
+    init: true
+    labels:
+      icon: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/assets/logos/keyku.png
+      org.opencontainers.image.description: Self-hosted Steam key vault with first-run admin setup and public share links.
+      org.opencontainers.image.source: https://github.com/MaroIshiku/keyku
+      org.opencontainers.image.title: Keyku - Key Vault
+      org.opencontainers.image.url: https://github.com/MaroIshiku/keyku
     logging:
       driver: json-file
       options:
-        max-size: "5m"
         max-file: "3"
+        max-size: 5m
+    mem_limit: "134217728"
+    pids_limit: 128
+    ports:
+      - target: 3000
+        published: "8186"
+        protocol: tcp
+    pull_policy: always
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    volumes:
+      - type: bind
+        source: /DATA/AppData/ish_keyku/data
+        target: /data
+    devices: []
+    networks:
+      - Keyku
+    privileged: false
+networks:
+  Keyku:
+    name: Keyku
+    driver: bridge
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+  author: MaroIshiku
+  category: Utilities
+  description:
+    de_de: Self-hosted Steam-Key-Tresor mit Admin-Setup, geschuetzten Konten und oeffentlichen Share-Links.
+    en_us: Self-hosted Steam key vault with admin setup, protected accounts and public share links.
+  developer: MaroIshiku
+  hostname: ""
+  icon: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/assets/logos/keyku.png
+  index: /
+  is_uncontrolled: false
+  main: Keyku
+  port_map: "8186"
+  scheme: http
+  store_app_id: Keyku
+  tagline:
+    de_de: Privater Steam-Key-Tresor fuer Familie und Freunde.
+    en_us: Private Steam key vault for family and friends.
+  thumbnail: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/assets/logos/keyku.png
+  tips:
+    before_install:
+      de_de: >
+        Pflicht: Setze ISHIKU_SETUP_SECRET vor dem Start auf einen langen
+        zufaelligen Wert. Dieses Secret wird nur fuer die Erstellung des
+        ersten Adminaccounts verwendet.
+
+
+        Persistente Daten liegen auf dem ZimaOS-Host unter /DATA/AppData/ish_keyku/data und werden im Container nach /data gemountet.
+
+
+        Veroeffentliche die WebUI ueber HTTPS, wenn du die App ausserhalb deines lokalen Netzes bereitstellst.
+      en_us: >
+        Required: set ISHIKU_SETUP_SECRET to a long random value before
+        starting. This secret is only used to create the first admin account.
+
+
+        Persistent data is stored on the ZimaOS host at /DATA/AppData/ish_keyku/data and mounted into the container at /data.
+
+
+        Publish the WebUI through HTTPS when exposing the app outside your local network.
+  title:
+    custom: Keyku - Key Vault
+    de_de: Keyku
+    en_us: Keyku
