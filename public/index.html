@@ -141,7 +141,7 @@
         </div>
         <div class="psu-spacer"></div>
         <button id="notifications-button" class="psu-icon-button keyku-admin-only" type="button" aria-label="Open notifications" data-psu-open="#notifications-sheet" hidden>
-          <svg><use href="#psu-icon-info"></use></svg>
+          <svg><use href="#psu-icon-bell"></use></svg>
           <span id="notification-badge" class="keyku-badge" hidden>0</span>
         </button>
         <button id="profile-button" class="psu-avatar-button" type="button" aria-label="Open profile menu" data-psu-open="#profile-sheet">K</button>
@@ -149,19 +149,6 @@
     </header>
 
     <main class="psu-main keyku-main">
-      <section class="psu-hero-card keyku-hero">
-        <div>
-          <h2 class="psu-card-title">Key Vault</h2>
-          <p id="vault-summary" class="psu-card-text">Loading vault...</p>
-        </div>
-        <div class="psu-card-actions keyku-admin-only" hidden>
-          <button id="new-key" class="psu-button psu-button--filled" type="button">
-            <svg><use href="#psu-icon-key"></use></svg>
-            New key
-          </button>
-        </div>
-      </section>
-
       <section class="keyku-stat-grid" aria-label="Vault overview">
         <article class="psu-card keyku-stat"><span>Free</span><strong id="stat-free">0</strong></article>
         <article class="psu-card keyku-stat"><span>Used</span><strong id="stat-used">0</strong></article>
@@ -186,6 +173,10 @@
             <option value="status-available">Free first</option>
             <option value="status-claimed">Used first</option>
           </select>
+          <button id="new-key" class="psu-button psu-button--filled keyku-admin-only keyku-new-key-button" type="button" hidden>
+            <svg><use href="#psu-icon-plus"></use></svg>
+            New key
+          </button>
         </div>
         <ul id="rows" class="keyku-key-list" aria-live="polite">
           <li class="keyku-empty">Loading vault...</li>
@@ -210,7 +201,7 @@
       </div>
       <div class="psu-list">
         <button class="psu-list-row" type="button" data-psu-open="#settings-sheet"><svg class="psu-list-row__icon"><use href="#psu-icon-settings"></use></svg><span class="psu-list-row__label">Settings</span><span></span></button>
-        <button id="profile-notifications-row" class="psu-list-row keyku-admin-only" type="button" data-psu-open="#notifications-sheet" hidden><svg class="psu-list-row__icon"><use href="#psu-icon-info"></use></svg><span class="psu-list-row__label">Notifications</span><span></span></button>
+        <button id="profile-notifications-row" class="psu-list-row keyku-admin-only" type="button" data-psu-open="#notifications-sheet" hidden><svg class="psu-list-row__icon"><use href="#psu-icon-bell"></use></svg><span class="psu-list-row__label">Notifications</span><span></span></button>
         <button id="logout" class="psu-list-row" type="button"><svg class="psu-list-row__icon"><use href="#psu-icon-logout"></use></svg><span class="psu-list-row__label">Sign out</span><span></span></button>
       </div>
     </section>

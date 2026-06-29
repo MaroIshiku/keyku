@@ -51,7 +51,6 @@ const el = {
   rows: $("#rows"),
   search: $("#search"),
   sort: $("#sort"),
-  summary: $("#vault-summary"),
   statFree: $("#stat-free"),
   statUsed: $("#stat-used"),
   statTotal: $("#stat-total"),
@@ -467,7 +466,6 @@ function renderKeys() {
   el.statFree.textContent = String(free);
   el.statUsed.textContent = String(used);
   el.statTotal.textContent = String(state.keys.length);
-  el.summary.textContent = `${free} free - ${used} used - ${state.keys.length} total`;
 
   if (!state.keys.length) {
     el.rows.innerHTML = `<li class="keyku-empty">

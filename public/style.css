@@ -6,13 +6,6 @@
   gap: var(--space-5);
 }
 
-.keyku-hero {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
 .keyku-stat-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -47,7 +40,7 @@
 
 .keyku-toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto minmax(180px, auto);
+  grid-template-columns: minmax(220px, 1fr) auto minmax(180px, auto) auto;
   gap: var(--space-3);
   align-items: center;
   margin-block-end: var(--space-4);
@@ -59,6 +52,10 @@
 
 .keyku-select {
   min-inline-size: 180px;
+}
+
+.keyku-new-key-button {
+  white-space: nowrap;
 }
 
 .keyku-key-list {
@@ -363,16 +360,15 @@ code {
 }
 
 @media (max-width: 900px) {
-  .keyku-hero {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .keyku-toolbar {
     grid-template-columns: 1fr;
   }
 
   .keyku-select {
+    inline-size: 100%;
+  }
+
+  .keyku-new-key-button {
     inline-size: 100%;
   }
 
