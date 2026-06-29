@@ -4,10 +4,12 @@ import { setPixelSoftUtilityMode, setPixelSoftUtilityTheme } from "./design-syst
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+const MASKED_KEY = "*****-*****-*****";
 
 const appConfig = JSON.parse($("script[data-psu-app-config]").textContent);
 const state = {
   user: null,
+  authMode: "login",
   keys: [],
   filter: "available",
   query: "",
@@ -34,11 +36,18 @@ const el = {
   setupRetry: $("#setup-retry"),
   setupErrorCopy: $("#setup-error-copy"),
   setupErrorKey: $("#setup-error-key"),
+  authTitle: $("#auth-title"),
   authForm: $("#auth-form"),
+  authDisplayNameField: $("#auth-display-name-field"),
+  authDisplayName: $("#auth-display-name"),
   authUsername: $("#auth-username"),
+  authEmailField: $("#auth-email-field"),
+  authEmail: $("#auth-email"),
   authPassword: $("#auth-password"),
   authMessage: $("#auth-message"),
   passwordResetRequest: $("#password-reset-request"),
+  authModeToggle: $("#auth-mode-toggle"),
+  authSubmit: $("#auth-submit"),
   rows: $("#rows"),
   search: $("#search"),
   sort: $("#sort"),
@@ -126,7 +135,7 @@ function formatDate(iso) {
   if (!iso) return "";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
+  return date.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function toDateTimeLocal(iso) {
@@ -176,8 +185,9 @@ async function api(path, options = {}) {
   });
   const data = await readJsonResponse(response);
   if (response.status === 401 && path !== "/api/auth/me") {
+    setAuthMode("login");
     showView("auth");
-    throw new Error(data.error || "Anmeldung erforderlich.");
+    throw new Error(data.error || "Login required.");
   }
   if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
   return data;
@@ -211,6 +221,7 @@ async function refreshSession() {
 
   const session = await api("/api/auth/me");
   if (!session.authenticated) {
+    setAuthMode("login");
     showView("auth");
     return;
   }
@@ -255,7 +266,7 @@ function showApp(user, meta = {}) {
   el.profileButton.textContent = userInitials;
   el.profileAvatar.textContent = userInitials;
   el.profileName.textContent = user.displayName || user.username;
-  el.profileId.textContent = `${user.username}${user.role === "admin" ? " Â· Admin" : ""}`;
+  el.profileId.textContent = `${user.username}${user.role === "admin" ? " - Admin" : ""}`;
   $$(".keyku-admin-only").forEach((node) => { node.hidden = user.role !== "admin"; });
   updateNotificationIndicator(meta.notificationCount || meta.pendingCount || 0);
   loadKeys();
@@ -268,6 +279,19 @@ function updateNotificationIndicator(count) {
   el.notificationBadge.textContent = String(value);
 }
 
+function setAuthMode(mode) {
+  state.authMode = mode === "request" ? "request" : "login";
+  const requesting = state.authMode === "request";
+  el.authTitle.textContent = requesting ? "Request account" : "Sign in";
+  el.authDisplayNameField.hidden = !requesting;
+  el.authEmailField.hidden = !requesting;
+  el.passwordResetRequest.hidden = requesting;
+  el.authModeToggle.textContent = requesting ? "Back to sign in" : "Request account";
+  el.authSubmit.textContent = requesting ? "Send request" : "Sign in";
+  el.authPassword.autocomplete = requesting ? "new-password" : "current-password";
+  el.authMessage.textContent = "";
+}
+
 function bindEvents() {
   el.setupHelpToggle.addEventListener("click", () => {
     el.setupHelp.hidden = !el.setupHelp.hidden;
@@ -275,11 +299,30 @@ function bindEvents() {
   });
   el.setupRetry.addEventListener("click", refreshSession);
 
+  el.authModeToggle.addEventListener("click", () => {
+    setAuthMode(state.authMode === "login" ? "request" : "login");
+  });
+
   el.authForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     el.authMessage.textContent = "";
-    el.authForm.querySelector("button[type='submit']").disabled = true;
+    el.authSubmit.disabled = true;
     try {
+      if (state.authMode === "request") {
+        const data = await api("/api/auth/register", {
+          method: "POST",
+          body: JSON.stringify({
+            displayName: el.authDisplayName.value,
+            username: el.authUsername.value,
+            email: el.authEmail.value,
+            password: el.authPassword.value,
+          }),
+        });
+        el.authForm.reset();
+        setAuthMode("login");
+        el.authMessage.textContent = data.message || "Account request sent. An admin must approve it before you can sign in.";
+        return;
+      }
       const data = await api("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({ username: el.authUsername.value, password: el.authPassword.value }),
@@ -290,14 +333,14 @@ function bindEvents() {
     } catch (error) {
       el.authMessage.textContent = error.message;
     } finally {
-      el.authForm.querySelector("button[type='submit']").disabled = false;
+      el.authSubmit.disabled = false;
     }
   });
 
   el.passwordResetRequest.addEventListener("click", async () => {
     const username = el.authUsername.value.trim();
     if (!username) {
-      el.authMessage.textContent = "Username zuerst eintragen.";
+      el.authMessage.textContent = "Enter your username first.";
       el.authUsername.focus();
       return;
     }
@@ -322,6 +365,7 @@ function bindEvents() {
     state.user = null;
     state.keys = [];
     closeAllSheets();
+    setAuthMode("login");
     showView("auth");
   });
 
@@ -405,7 +449,7 @@ function sortedKeys(keys) {
   };
   switch (state.sort) {
     case "name-desc":
-      return copy.sort((a, b) => b.game.localeCompare(a.game, "de", { sensitivity: "base", numeric: true }));
+      return copy.sort((a, b) => b.game.localeCompare(a.game, "en", { sensitivity: "base", numeric: true }));
     case "added-desc":
       return copy.sort((a, b) => addedTime(b) - addedTime(a) || a.index - b.index);
     case "status-available":
@@ -413,7 +457,7 @@ function sortedKeys(keys) {
     case "status-claimed":
       return copy.sort((a, b) => Number(b.redeemed) - Number(a.redeemed) || a.index - b.index);
     default:
-      return copy.sort((a, b) => a.game.localeCompare(b.game, "de", { sensitivity: "base", numeric: true }));
+      return copy.sort((a, b) => a.game.localeCompare(b.game, "en", { sensitivity: "base", numeric: true }));
   }
 }
 
@@ -423,12 +467,12 @@ function renderKeys() {
   el.statFree.textContent = String(free);
   el.statUsed.textContent = String(used);
   el.statTotal.textContent = String(state.keys.length);
-  el.summary.textContent = `${free} frei Â· ${used} benutzt Â· ${state.keys.length} gesamt`;
+  el.summary.textContent = `${free} free - ${used} used - ${state.keys.length} total`;
 
   if (!state.keys.length) {
     el.rows.innerHTML = `<li class="keyku-empty">
       <div class="psu-logo-frame" aria-hidden="true"><img src="/assets/logos/keyku.png" alt="" /></div>
-      <strong>Noch keine Keys</strong>
+      <strong>No keys yet</strong>
       <span>Admins can create keys directly in the vault.</span>
     </li>`;
     return;
@@ -448,7 +492,7 @@ function renderKeys() {
   el.rows.innerHTML = visible.map((entry) => {
     const status = entry.redeemed ? "Used" : "Free";
     const statusClass = entry.redeemed ? "is-used" : "is-free";
-    const redeemedBy = entry.redeemedByName ? ` von ${entry.redeemedByName}` : "";
+    const redeemedBy = entry.redeemedByName ? ` by ${entry.redeemedByName}` : "";
     const meta = entry.redeemed && entry.redeemedAt
       ? `Redeemed ${formatDate(entry.redeemedAt)}${redeemedBy}`
       : (entry.addedAt ? `Added ${formatDate(entry.addedAt)}` : "Ready");
@@ -462,7 +506,7 @@ function renderKeys() {
           <strong>${escapeHtml(entry.game || "Untitled")}</strong>
           <small>${escapeHtml(meta)}</small>
         </span>
-        <span class="keyku-secret-preview">â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢</span>
+        <span class="keyku-secret-preview">${MASKED_KEY}</span>
         <span class="keyku-status ${statusClass}">${status}</span>
         <span class="keyku-row-actions">${action}</span>
       </li>`;
@@ -477,14 +521,14 @@ function openNewKey() {
   state.creating = true;
   state.activeIndex = null;
   state.activeSecret = "";
-  el.detailTitle.textContent = "Neuer Key";
+  el.detailTitle.textContent = "New key";
   el.detailGame.value = "";
   el.detailKey.value = "";
   el.detailKey.type = "text";
   el.detailAdded.value = toDateTimeLocal(new Date().toISOString());
   el.detailRedeemed.value = "";
   el.detailRedeemedBy.value = "";
-  el.detailReveal.textContent = "Verbergen";
+  el.detailReveal.textContent = "Hide";
   el.detailRedeem.hidden = true;
   el.detailUnredeem.hidden = true;
   el.detailDelete.hidden = true;
@@ -506,12 +550,12 @@ function openDetail(index) {
   state.activeSecret = "";
   el.detailTitle.textContent = entry.game || "Key";
   el.detailGame.value = entry.game || "";
-  el.detailKey.value = "â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢";
+  el.detailKey.value = MASKED_KEY;
   el.detailKey.type = "password";
   el.detailAdded.value = toDateTimeLocal(entry.addedAt);
   el.detailRedeemed.value = toDateTimeLocal(entry.redeemedAt);
-  el.detailRedeemedBy.value = entry.redeemedByName || (entry.redeemed ? "Unbekannt" : "");
-  el.detailReveal.textContent = "Anzeigen";
+  el.detailRedeemedBy.value = entry.redeemedByName || (entry.redeemed ? "Unknown" : "");
+  el.detailReveal.textContent = "Show";
   el.detailRedeem.hidden = entry.redeemed;
   el.detailUnredeem.hidden = !entry.redeemed;
   el.detailDelete.hidden = state.user?.role !== "admin";
@@ -534,7 +578,7 @@ function setDetailReadonly(readonly) {
 
 function updateDetailLinks() {
   const game = el.detailGame.value;
-  el.detailTitle.textContent = game || (state.creating ? "Neuer Key" : "Key");
+  el.detailTitle.textContent = game || (state.creating ? "New key" : "Key");
   el.detailSteam.href = steamSearchUrl(game);
   el.detailSteamDb.href = steamDbUrl(game);
 }
@@ -543,7 +587,7 @@ async function revealActiveKey() {
   if (state.creating) {
     state.activeSecret = el.detailKey.value;
     el.detailKey.type = "text";
-    el.detailReveal.textContent = "Verbergen";
+    el.detailReveal.textContent = "Hide";
     return state.activeSecret;
   }
   if (state.activeIndex == null) return "";
@@ -553,15 +597,15 @@ async function revealActiveKey() {
   }
   el.detailKey.value = state.activeSecret;
   el.detailKey.type = "text";
-  el.detailReveal.textContent = "Verbergen";
+  el.detailReveal.textContent = "Hide";
   return state.activeSecret;
 }
 
 async function toggleReveal() {
   if (el.detailKey.type === "text") {
     el.detailKey.type = "password";
-    if (!state.creating) el.detailKey.value = "â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢";
-    el.detailReveal.textContent = "Anzeigen";
+    if (!state.creating) el.detailKey.value = MASKED_KEY;
+    el.detailReveal.textContent = "Show";
     return;
   }
   try {
@@ -625,7 +669,7 @@ async function redeem(index, button) {
   try {
     const data = await api(`/api/redeem/${encodeURIComponent(index)}`, { method: "POST", body: "{}" });
     if (data.redeemUrl) window.open(data.redeemUrl, "_blank", "noopener,noreferrer");
-    showToast("Key als benutzt markiert", "success");
+    showToast("Key marked as used", "success");
     await loadKeys();
     if (!el.detailDialog.hidden) openDetail(index);
   } catch (error) {
@@ -640,7 +684,7 @@ async function unredeem(index, button) {
   button.disabled = true;
   try {
     await api(`/api/unredeem/${encodeURIComponent(index)}`, { method: "POST", body: "{}" });
-    showToast("Key ist wieder frei", "success");
+    showToast("Key is free again", "success");
     await loadKeys();
     openDetail(index);
   } catch (error) {
@@ -689,7 +733,7 @@ async function saveKey(event) {
       addedAt: fromDateTimeLocal(el.detailAdded.value),
       redeemedAt: fromDateTimeLocal(el.detailRedeemed.value),
     };
-    if (state.creating || state.activeSecret || el.detailKey.value !== "â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢") {
+    if (state.creating || state.activeSecret || el.detailKey.value !== MASKED_KEY) {
       body.key = el.detailKey.value.trim();
     }
     const path = state.creating ? "/api/admin/keys" : `/api/admin/keys/${encodeURIComponent(state.activeIndex)}`;
@@ -722,19 +766,19 @@ function renderNotifications(data) {
   const reactivations = data.reactivationRequests || [];
   const resets = data.passwordResetRequests || [];
   el.notificationsBody.innerHTML = `
-    ${notificationSection("Neue Nutzer", pendingUsers, (user) => `
+    ${notificationSection("New users", pendingUsers, (user) => `
       <article class="psu-card keyku-list-card">
-        <div><strong>${escapeHtml(user.username)}</strong><small>Registriert ${formatDate(user.createdAt)}</small></div>
+        <div><strong>${escapeHtml(user.username)}</strong><small>Requested ${formatDate(user.createdAt)}</small></div>
         <div class="psu-card-actions">
-          <button class="psu-button psu-button--filled" data-user-approve="${escapeHtml(user.id)}" type="button">Freegeben</button>
+          <button class="psu-button psu-button--filled" data-user-approve="${escapeHtml(user.id)}" type="button">Approve</button>
           <button class="psu-button psu-button--danger" data-user-reject="${escapeHtml(user.id)}" type="button">Reject</button>
         </div>
       </article>`)}
-    ${notificationSection("Reaktivierung", reactivations, (request) => `
+    ${notificationSection("Reactivation", reactivations, (request) => `
       <article class="psu-card keyku-list-card">
-        <div><strong>${escapeHtml(request.game || "Untitled")}</strong><small>${escapeHtml(request.requestedByName || "Unbekannt")} Â· ${formatDate(request.createdAt)}</small></div>
+        <div><strong>${escapeHtml(request.game || "Untitled")}</strong><small>${escapeHtml(request.requestedByName || "Unknown")} - ${formatDate(request.createdAt)}</small></div>
         <div class="psu-card-actions">
-          <button class="psu-button psu-button--filled" data-reactivation-approve="${escapeHtml(request.id)}" type="button">Freegeben</button>
+          <button class="psu-button psu-button--filled" data-reactivation-approve="${escapeHtml(request.id)}" type="button">Approve</button>
           <button class="psu-button psu-button--danger" data-reactivation-reject="${escapeHtml(request.id)}" type="button">Reject</button>
         </div>
       </article>`)}
@@ -742,8 +786,8 @@ function renderNotifications(data) {
       <article class="psu-card keyku-list-card">
         <div><strong>${escapeHtml(request.username)}</strong><small>${formatDate(request.createdAt)}</small></div>
         <div class="keyku-inline-field">
-          <input class="psu-input" type="password" minlength="10" placeholder="Neues Password" data-reset-input="${escapeHtml(request.id)}" />
-          <button class="psu-button psu-button--filled" data-reset-complete="${escapeHtml(request.id)}" type="button">Setzen</button>
+          <input class="psu-input" type="password" minlength="10" placeholder="New password" data-reset-input="${escapeHtml(request.id)}" />
+          <button class="psu-button psu-button--filled" data-reset-complete="${escapeHtml(request.id)}" type="button">Set</button>
           <button class="psu-button psu-button--danger" data-reset-reject="${escapeHtml(request.id)}" type="button">Reject</button>
         </div>
       </article>`)}

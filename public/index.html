@@ -87,7 +87,7 @@
         <section id="setup-help" class="psu-technical-card" hidden>
           <p class="psu-card-text">For simple installs, set <code>ISHIKU_SETUP_SECRET</code> in Docker Compose. As a hardened alternative, mount a Docker secret at <code>/run/secrets/ishiku_setup_secret</code>.</p>
         </section>
-        <p class="psu-setup-footnote">After the first admin account is created, public registration is closed.</p>
+        <p class="psu-setup-footnote">After setup, new users can request an account for admin approval.</p>
       </form>
     </section>
   </main>
@@ -102,9 +102,17 @@
         </div>
       </div>
       <form id="auth-form" class="psu-form-stack">
+        <label id="auth-display-name-field" class="psu-field" hidden>
+          <span class="psu-label">Display name</span>
+          <input id="auth-display-name" class="psu-input" name="displayName" autocomplete="name" maxlength="80" />
+        </label>
         <label class="psu-field">
           <span class="psu-label">Username</span>
           <input id="auth-username" class="psu-input" name="username" autocomplete="username" required />
+        </label>
+        <label id="auth-email-field" class="psu-field" hidden>
+          <span class="psu-label">Email optional</span>
+          <input id="auth-email" class="psu-input" name="email" type="email" autocomplete="email" maxlength="180" />
         </label>
         <label class="psu-field">
           <span class="psu-label">Password</span>
@@ -113,6 +121,7 @@
         <p id="auth-message" class="psu-field-error" role="status" aria-live="polite"></p>
         <div class="psu-setup-actions">
           <button id="password-reset-request" class="psu-button psu-button--text" type="button">Request password reset</button>
+          <button id="auth-mode-toggle" class="psu-button psu-button--text" type="button">Request account</button>
           <button id="auth-submit" class="psu-button psu-button--filled" type="submit">Sign in</button>
         </div>
       </form>
@@ -128,7 +137,7 @@
         </div>
         <div class="psu-app-title-stack">
           <h1 class="psu-app-title" data-psu-app-name>Keyku - Key Vault</h1>
-          <p class="psu-app-subtitle" data-psu-app-subtitle>Steam-Keys sicher teilen</p>
+          <p class="psu-app-subtitle" data-psu-app-subtitle>Share Steam keys securely</p>
         </div>
         <div class="psu-spacer"></div>
         <button id="notifications-button" class="psu-icon-button keyku-admin-only" type="button" aria-label="Open notifications" data-psu-open="#notifications-sheet" hidden>

@@ -18,7 +18,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 APP_ID = "keyku"
 APP_NAME = "Keyku - Key Vault"
 APP_SUBTITLE = "Secure Steam key sharing"
-APP_VERSION = os.environ.get("APP_VERSION", "0.2.0")
+APP_VERSION = os.environ.get("APP_VERSION", "0.2.1")
 APP_BUILD_DATE = os.environ.get("APP_BUILD_DATE", "local")
 APP_GIT_SHA = os.environ.get("GITHUB_SHA", os.environ.get("APP_GIT_SHA", "local"))
 PORT = int(os.environ.get("PORT", "3000"))
@@ -638,7 +638,42 @@ def auth_me():
 
 @app.post("/api/auth/register")
 def auth_register():
-    return jsonify({"error": "Public registration is closed. Ask an admin to create an account."}), 410
+    if not setup_completed():
+        return jsonify({"error": "Setup must be completed before account requests can be sent."}), 409
+    body = json_body()
+    username = normalize_username(body.get("username"))
+    password = str(body.get("password") or "")
+    credential_error = validate_credentials(username, password, min_password_length=12)
+    if credential_error:
+        return jsonify({"error": credential_error}), 400
+    display_name = str(body.get("displayName") or username).strip()
+    email = str(body.get("email") or "").strip()
+    if not display_name or len(display_name) > 80:
+        return jsonify({"error": "Display name is required and must be at most 80 characters."}), 400
+    if len(email) > 180:
+        return jsonify({"error": "Email address is too long."}), 400
+    if password.strip().lower() in PLACEHOLDER_PASSWORDS or password.strip().lower() in {username, APP_ID, APP_NAME.lower()}:
+        return jsonify({"error": "Please choose a stronger password."}), 400
+    with file_lock:
+        data = read_users()
+        if any(user.get("username") == username for user in data["users"]):
+            return jsonify({"error": "This username is already taken."}), 409
+        hashed = hash_password(password)
+        user = {
+            "id": secrets.token_urlsafe(24),
+            "username": username,
+            "displayName": display_name,
+            "email": email,
+            "passwordHash": hashed["hash"],
+            "salt": hashed["salt"],
+            "iterations": hashed["iterations"],
+            "role": "user",
+            "status": "pending",
+            "createdAt": now_iso(),
+        }
+        data["users"].append(user)
+        write_users(data)
+    return jsonify({"ok": True, "message": "Account request sent. An admin must approve it before you can sign in.", "user": public_user(user)}), 202
 
 
 @app.post("/api/auth/login")
