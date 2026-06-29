@@ -15,9 +15,6 @@ services:
     volumes:
       - /DATA/AppData/keyku/data:/data
 
-    secrets:
-      - ishiku_setup_secret
-
     environment:
       - TZ=Europe/Berlin
       - ISHIKU_APP_URL=
@@ -25,7 +22,8 @@ services:
       - ISHIKU_DATA_DIR=/data
       - ISHIKU_LOG_LEVEL=info
       - ISHIKU_TRUST_PROXY=false
-      - ISHIKU_SETUP_SECRET_FILE=/run/secrets/ishiku_setup_secret
+      # Simple setup path: set a long random secret here before first start.
+      - ISHIKU_SETUP_SECRET=replace-with-a-long-random-setup-secret
       - PORT=3000
       - PUBLIC_DIR=/app/public
 
@@ -41,7 +39,3 @@ services:
       options:
         max-size: "5m"
         max-file: "3"
-
-secrets:
-  ishiku_setup_secret:
-    file: /DATA/AppData/keyku/secrets/setup_secret.txt

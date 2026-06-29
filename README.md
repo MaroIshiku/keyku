@@ -1,86 +1,93 @@
 # Keyku - Key Vault
 
-Self-hosted Steam-Key-Vault für Docker und ZimaOS.
+Self-hosted Steam key vault for Docker and ZimaOS.
 
-## Kurzbeschreibung
+## Short Description
 
-Keyku verwaltet eine gemeinsame Steam-Key-Liste mit Login, Adminbereich, Share-Links und Reaktivierungsanfragen. Die App nutzt ein kleines Flask-Backend, ein statisches Vanilla-Frontend und persistiert Daten im gemounteten Datenordner.
+Keyku manages a shared Steam key list with login, admin tooling, public share links, and reactivation requests. The app uses a small Flask backend, a static vanilla frontend, and persistent files in the mounted data directory.
 
-## Teil der ishiku-Familie
+## Part of the ishiku Family
 
-Keyku folgt dem gemeinsamen Pixel Soft Utility Designsystem für ishiku Apps: ruhig, rund, praktisch und für Self-hosting gebaut. Themes, App-Shell, Setup-Verhalten und Admin-Info-Bereiche sind appübergreifend konsistent.
+Keyku follows the shared Pixel Soft Utility design system for ishiku apps: calm, rounded, practical, and built for self-hosting. Themes, app shell, setup behavior, and admin information surfaces are consistent across the app family.
 
-Unterstützt werden die sechs gemeinsamen Themes Lavender, Mint, Sky, Amber, Rose und Graphite sowie System-, Hell- und Dunkelmodus.
+The shared themes are Lavender, Mint, Sky, Amber, Rose, and Graphite. System, light, and dark modes are supported.
 
-## Funktionen
+## Features
 
-- Gemeinsamer Steam-Key-Vault mit Suche, Statusfilter und Sortierung
-- Login mit HttpOnly-Session-Cookie
-- First-Run-Setup für den ersten Adminaccount
-- Setup-Secret per Docker Secret oder Env-Fallback
-- Admin-Verwaltung für Keys, Benutzer, Anfragen und Wartung
-- Share-Links pro Key ohne Login, geschützt über HMAC-Token
-- Key-Reveal, Kopieren, Einlösen, Steam-Suche und SteamDB-Link
-- Reaktivierungsanfragen für bereits benutzte Keys
-- Passwort-Reset-Anfragen über den Adminbereich
-- Health- und Readiness-Endpunkte für Containerbetrieb
+- Shared Steam key vault with search, status filters, and sorting
+- Login with signed HttpOnly session cookies
+- First-run setup for the initial admin account
+- Simple setup secret via Docker Compose environment variable
+- Optional hardened setup secret via Docker secret file
+- Admin tools for keys, users, requests, and maintenance
+- Public per-key share links protected with HMAC tokens
+- Reveal, copy, redeem, Steam search, and SteamDB actions
+- Reactivation requests for already used keys
+- Password reset requests handled by admins
+- Health and readiness endpoints for container operation
 
 ## Tech Stack
 
 - Python 3.12
 - Flask
 - Gunicorn
-- Vanilla HTML, CSS und JavaScript
-- Pixel Soft Utility Designsystem
+- Vanilla HTML, CSS, and JavaScript
+- Pixel Soft Utility design system
 - Docker / Docker Compose
 
 ## Installation
 
 ### Docker Compose
 
-Für ZimaOS ist die Hauptdatei auf absolute Pfade ausgelegt:
+For ZimaOS, the main Compose file uses absolute host paths:
 
 ```bash
 mkdir -p /DATA/AppData/keyku/data
-mkdir -p /DATA/AppData/keyku/secrets
-openssl rand -base64 48 > /DATA/AppData/keyku/secrets/setup_secret.txt
 docker compose pull
 docker compose up -d
 ```
 
-Die App läuft danach standardmäßig auf:
+Before the first start, edit `docker-compose.yml` and replace:
+
+```yaml
+- ISHIKU_SETUP_SECRET=replace-with-a-long-random-setup-secret
+```
+
+with a long random setup secret of your own.
+
+The app is available at:
 
 ```text
 http://<server-ip>:8080
 ```
 
-### Erstes Starten
+### First Start
 
-Beim ersten Start prüft Keyku, ob ein Adminaccount existiert. Wenn nicht, erscheint sofort das Setup-Fenster. Ohne konfiguriertes Setup-Secret bleibt die App geschlossen und zeigt den fehlenden Konfigurationsschlüssel.
+On first start, Keyku checks whether an admin account exists. If not, the setup window opens immediately. If no setup secret is configured, the app stays closed and shows the missing configuration key.
 
-### Adminaccount erstellen
+### Create the Admin Account
 
-Im Setup-Fenster werden Setup-Secret, Anzeigename, Admin-Benutzername und Passwort eingetragen. Nach erfolgreicher Erstellung ist öffentliche Registrierung geschlossen. Weitere Konten werden anschließend durch Admins in der App erstellt.
+Enter the setup secret, display name, admin username, and admin password in the setup window. After the first admin is created, public registration is closed. Additional accounts are created by admins inside the app.
 
-## Konfiguration
+## Configuration
 
-### Umgebungsvariablen
+### Environment Variables
 
-| Variable | Beschreibung |
+| Variable | Description |
 | --- | --- |
-| `TZ` | Zeitzone, empfohlen `Europe/Berlin` |
-| `ISHIKU_APP_URL` | Öffentliche URL hinter Reverse Proxy, für Share-Links |
-| `ISHIKU_BASE_PATH` | Optionaler Basis-Pfad, Standard `/` |
-| `ISHIKU_DATA_DIR` | Persistenter Datenordner im Container, Standard `/data` |
-| `ISHIKU_LOG_LEVEL` | Log-Level, Standard `info` |
-| `ISHIKU_TRUST_PROXY` | `true`, wenn ein vertrauenswürdiger Reverse Proxy genutzt wird |
-| `ISHIKU_SETUP_SECRET_FILE` | Pfad zum Docker Secret, Standard `/run/secrets/ishiku_setup_secret` |
-| `ISHIKU_SETUP_SECRET` | Fallback, wenn Docker Secrets nicht genutzt werden |
-| `PORT` | Interner HTTP-Port, Standard `3000` |
+| `TZ` | Time zone, recommended `Europe/Berlin` |
+| `ISHIKU_APP_URL` | Public URL behind a reverse proxy, used for share links |
+| `ISHIKU_BASE_PATH` | Optional base path, default `/` |
+| `ISHIKU_DATA_DIR` | Persistent data directory in the container, default `/data` |
+| `ISHIKU_LOG_LEVEL` | Log level, default `info` |
+| `ISHIKU_TRUST_PROXY` | Set to `true` when running behind a trusted reverse proxy |
+| `ISHIKU_SETUP_SECRET` | Simple first-run setup secret for Docker Compose |
+| `ISHIKU_SETUP_SECRET_FILE` | Optional path to a mounted Docker secret file |
+| `PORT` | Internal HTTP port, default `3000` |
 
 ### Docker Secrets
 
-Bevorzugt wird ein Docker Secret:
+The simple path is `ISHIKU_SETUP_SECRET` in Compose. If you prefer a mounted Docker secret, use:
 
 ```yaml
 secrets:
@@ -88,11 +95,17 @@ secrets:
     file: ./secrets/setup_secret.txt
 ```
 
-Das Secret wird nur für die erste Admin-Erstellung verwendet und nicht in der App-Datenbank gespeichert.
+and set:
 
-### Persistente Daten
+```yaml
+ISHIKU_SETUP_SECRET_FILE: /run/secrets/ishiku_setup_secret
+```
 
-Keyku legt im Datenordner unter anderem diese Dateien an:
+The setup secret is only used for the first admin setup and is not stored in the app database.
+
+### Persistent Data
+
+Keyku creates these files in the data directory:
 
 - `keys.csv`
 - `users.json`
@@ -101,20 +114,22 @@ Keyku legt im Datenordner unter anderem diese Dateien an:
 - `session-secret.txt`
 - `setup-state.json`
 
-Diese Dateien sollten zusammen gesichert werden.
+Back up these files together.
 
-## Sicherheit
+## Security
 
-- Das Setup-Secret ist nur für die First-Run-Registrierung gedacht.
-- Das Admin-Passwort darf nicht mit dem Setup-Secret übereinstimmen.
-- Passwörter werden als PBKDF2/SHA-256 Hashes mit Salt gespeichert.
-- Öffentliche Registrierung ist nach dem ersten Adminaccount geschlossen.
-- Sessions laufen über signierte HttpOnly-Cookies mit SameSite=Lax.
-- Normale Key-Listenantworten enthalten keine Klartext-Keys.
-- Share-Links sind öffentlich, aber kryptisch und HMAC-basiert.
-- Secret-Werte gehören nicht in README, Logs, Images oder Git.
+- The setup secret is only used for first-run registration.
+- The admin password must not match the setup secret.
+- Passwords are stored as salted PBKDF2/SHA-256 hashes.
+- Public registration is closed after the first admin account.
+- Sessions use signed HttpOnly cookies with SameSite=Lax.
+- Normal key list responses never include plaintext keys.
+- Share links are public, cryptic, and HMAC-based.
+- API responses use `Cache-Control: no-store`.
+- Security headers include content type protection, referrer policy, permissions policy, frame protection, and a restrictive Content Security Policy.
+- Do not commit real secrets, `.env` files, logs, or runtime data.
 
-## Updates und Backup
+## Updates and Backup
 
 ```bash
 docker compose pull
@@ -122,11 +137,11 @@ docker compose up -d
 docker compose logs -f
 ```
 
-Für Backups den kompletten persistenten Datenordner sichern. Vor Wartungsaktionen wie dem Löschen benutzter Keys empfiehlt sich ein aktuelles Backup.
+Back up the complete persistent data directory before destructive maintenance actions.
 
-## Entwicklung
+## Development
 
-Lokal kann das Backend mit Flask oder über Docker gestartet werden. Die Frontend-Dateien liegen statisch in `public/`, das Backend in `python/app.py`.
+Frontend files are static in `public/`; the backend is in `python/app.py`.
 
 ```bash
 docker build -f python/Dockerfile -t keyku:local .
@@ -136,12 +151,12 @@ docker run --rm -p 3000:3000 \
   keyku:local
 ```
 
-## Erstellt mit ChatGPT Codex
+## Created with ChatGPT Codex
 
-Dieses Projekt wurde mit Unterstützung von ChatGPT Codex überarbeitet und implementiert. Codex ist nicht Eigentümer oder Betreiber des Projekts.
+This project was implemented and updated with assistance from ChatGPT Codex. Codex does not own or maintain the project.
 
-## Status und Lizenz
+## Status and License
 
-Status: aktiv in Entwicklung.
+Status: active development.
 
-Eine Lizenzdatei ist aktuell nicht enthalten.
+No license file is currently included.

@@ -1,4 +1,4 @@
-const BAD_PLACEHOLDER_PASSWORDS = new Set([
+﻿const BAD_PLACEHOLDER_PASSWORDS = new Set([
   "admin", "password", "passwort", "changeme", "change-me", "123456", "123456789", "ishiku"
 ]);
 
@@ -13,25 +13,25 @@ export function validateAdminSetupInput(input) {
   const normalizedPassword = password.trim().toLowerCase();
 
   if (!setupSecret.trim()) {
-    errors.setupSecret = "Setup-Secret ist erforderlich.";
+    errors.setupSecret = "Setup secret is required.";
   }
   if (!username) {
-    errors.username = "Admin-Benutzername ist erforderlich.";
+    errors.username = "Admin username is required.";
   }
   if (password.length < 12) {
-    errors.password = "Das Admin-Passwort muss mindestens 12 Zeichen lang sein.";
+    errors.password = "The admin password must be at least 12 characters.";
   }
   if (password && setupSecret && password === setupSecret) {
-    errors.password = "Das Admin-Passwort darf nicht mit dem Setup-Secret übereinstimmen.";
+    errors.password = "The admin password must not match the setup secret.";
   }
   if (normalizedPassword && BAD_PLACEHOLDER_PASSWORDS.has(normalizedPassword)) {
-    errors.password = "Bitte verwende kein Platzhalter-Passwort.";
+    errors.password = "Do not use a placeholder password.";
   }
   if (normalizedPassword && (normalizedPassword === username.toLowerCase() || normalizedPassword === appId || normalizedPassword === appName)) {
-    errors.password = "Das Admin-Passwort darf nicht Benutzername, App-ID oder App-Name sein.";
+    errors.password = "The admin password must not match the username, app ID, or app name.";
   }
   if (password !== passwordConfirm) {
-    errors.passwordConfirm = "Die Passwörter stimmen nicht überein.";
+    errors.passwordConfirm = "Passwords do not match.";
   }
   return {
     valid: Object.keys(errors).length === 0,

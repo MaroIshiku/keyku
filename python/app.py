@@ -17,7 +17,10 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 APP_ID = "keyku"
 APP_NAME = "Keyku - Key Vault"
-APP_SUBTITLE = "Steam-Keys sicher teilen"
+APP_SUBTITLE = "Secure Steam key sharing"
+APP_VERSION = os.environ.get("APP_VERSION", "0.2.0")
+APP_BUILD_DATE = os.environ.get("APP_BUILD_DATE", "local")
+APP_GIT_SHA = os.environ.get("GITHUB_SHA", os.environ.get("APP_GIT_SHA", "local"))
 PORT = int(os.environ.get("PORT", "3000"))
 DATA_DIR = Path(os.environ.get("ISHIKU_DATA_DIR", os.environ.get("DATA_DIR", "/data")))
 CSV_PATH = Path(os.environ.get("CSV_PATH", str(DATA_DIR / "keys.csv")))
@@ -243,7 +246,7 @@ def setup_status_payload():
         "setupCompleted": False,
         "setupConfigured": bool(secret.get("ok")),
         "errorKey": None if secret.get("ok") else secret.get("errorKey"),
-        "message": None if secret.get("ok") else "Setup-Secret ist nicht konfiguriert.",
+        "message": None if secret.get("ok") else "Setup secret is not configured.",
     }
 
 
@@ -520,6 +523,10 @@ def security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "same-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    if request.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"
     return response
 
 
@@ -549,6 +556,20 @@ def readyz():
 @app.get("/api/setup/status")
 def api_setup_status():
     return jsonify(setup_status_payload())
+
+
+@app.get("/api/app/about")
+def api_app_about():
+    return jsonify({
+        "app": {
+            "id": APP_ID,
+            "name": APP_NAME,
+            "subtitle": APP_SUBTITLE,
+            "version": APP_VERSION,
+            "buildDate": APP_BUILD_DATE,
+            "gitSha": APP_GIT_SHA,
+        }
+    })
 
 
 @app.post("/api/setup/register-admin")
@@ -714,9 +735,9 @@ def admin_info():
             "id": APP_ID,
             "name": APP_NAME,
             "subtitle": APP_SUBTITLE,
-            "version": os.environ.get("APP_VERSION", "local"),
-            "buildDate": os.environ.get("APP_BUILD_DATE", ""),
-            "gitSha": os.environ.get("GITHUB_SHA", ""),
+            "version": APP_VERSION,
+            "buildDate": APP_BUILD_DATE,
+            "gitSha": APP_GIT_SHA,
         },
         "runtime": {
             "dataDir": str(DATA_DIR),

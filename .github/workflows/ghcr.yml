@@ -28,12 +28,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build metadata
+        id: meta
+        run: echo "build_date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           file: python/Dockerfile
           push: true
+          build-args: |
+            APP_VERSION=0.2.0
+            APP_BUILD_DATE=${{ steps.meta.outputs.build_date }}
+            GITHUB_SHA=${{ github.sha }}
           tags: |
             ghcr.io/maroishiku/keyku:latest
             ghcr.io/maroishiku/keyku:${{ github.sha }}

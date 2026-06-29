@@ -1,9 +1,9 @@
 {
   "app_id": "keyku",
   "app_name": "Keyku - Key Vault",
-  "app_subtitle": "Steam-Keys sicher teilen",
+  "app_subtitle": "Secure Steam key sharing",
   "app_symbol": "key",
-  "primary_purpose": "Keyku verwaltet Steam-Keys in einem selbst gehosteten Vault.",
+  "primary_purpose": "Keyku manages Steam keys in a self-hosted vault.",
   "main_sections": ["vault"],
   "app_logo": {
     "src": "public/assets/logos/keyku.png",
@@ -34,7 +34,7 @@
     "repository_name": "keyku",
     "github_owner": "MaroIshiku",
     "public_repository": true,
-    "short_description": "Self-hosted Steam key vault im Pixel Soft Utility Design.",
+    "short_description": "Self-hosted Steam key vault in the Pixel Soft Utility design system.",
     "docker_image": "ghcr.io/maroishiku/keyku:latest",
     "codex_notice_enabled": true
   },

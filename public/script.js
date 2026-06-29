@@ -1,4 +1,4 @@
-import { initPixelSoftUtilityApp } from "./design-system/app-shell.js";
+﻿import { initPixelSoftUtilityApp } from "./design-system/app-shell.js";
 import { bindRegisterWindow } from "./design-system/setup-flow.js";
 import { setPixelSoftUtilityMode, setPixelSoftUtilityTheme } from "./design-system/theme-controller.js";
 
@@ -184,7 +184,7 @@ async function api(path, options = {}) {
 }
 
 function renderSetupError(status) {
-  el.setupErrorCopy.textContent = status.message || "Setup-Secret ist nicht konfiguriert.";
+  el.setupErrorCopy.textContent = status.message || "Setup secret is not configured.";
   el.setupErrorKey.textContent = status.errorKey || "ISHIKU_SETUP_SECRET";
   showView("setupError");
 }
@@ -236,7 +236,7 @@ function bindSetupForm() {
             passwordConfirm: formData.get("admin_password_confirm"),
           }),
         });
-        showToast("Adminaccount erstellt", "success");
+        showToast("Admin account created", "success");
         el.setupForm.reset();
         showApp(data.user, data);
       } catch (error) {
@@ -255,7 +255,7 @@ function showApp(user, meta = {}) {
   el.profileButton.textContent = userInitials;
   el.profileAvatar.textContent = userInitials;
   el.profileName.textContent = user.displayName || user.username;
-  el.profileId.textContent = `${user.username}${user.role === "admin" ? " · Admin" : ""}`;
+  el.profileId.textContent = `${user.username}${user.role === "admin" ? " Â· Admin" : ""}`;
   $$(".keyku-admin-only").forEach((node) => { node.hidden = user.role !== "admin"; });
   updateNotificationIndicator(meta.notificationCount || meta.pendingCount || 0);
   loadKeys();
@@ -271,7 +271,7 @@ function updateNotificationIndicator(count) {
 function bindEvents() {
   el.setupHelpToggle.addEventListener("click", () => {
     el.setupHelp.hidden = !el.setupHelp.hidden;
-    el.setupHelpToggle.textContent = el.setupHelp.hidden ? "Setup-Hilfe anzeigen" : "Setup-Hilfe ausblenden";
+    el.setupHelpToggle.textContent = el.setupHelp.hidden ? "Show setup help" : "Hide setup help";
   });
   el.setupRetry.addEventListener("click", refreshSession);
 
@@ -285,7 +285,7 @@ function bindEvents() {
         body: JSON.stringify({ username: el.authUsername.value, password: el.authPassword.value }),
       });
       el.authForm.reset();
-      showToast("Willkommen zurück", "success");
+      showToast("Welcome back", "success");
       showApp(data.user, data);
     } catch (error) {
       el.authMessage.textContent = error.message;
@@ -297,7 +297,7 @@ function bindEvents() {
   el.passwordResetRequest.addEventListener("click", async () => {
     const username = el.authUsername.value.trim();
     if (!username) {
-      el.authMessage.textContent = "Benutzername zuerst eintragen.";
+      el.authMessage.textContent = "Username zuerst eintragen.";
       el.authUsername.focus();
       return;
     }
@@ -308,7 +308,7 @@ function bindEvents() {
         body: JSON.stringify({ username }),
       });
       el.authPassword.value = "";
-      el.authMessage.textContent = data.message || "Anfrage wurde gesendet.";
+      el.authMessage.textContent = data.message || "Request was sent.";
     } catch (error) {
       el.authMessage.textContent = error.message;
     } finally {
@@ -317,7 +317,7 @@ function bindEvents() {
   });
 
   el.logout.addEventListener("click", async () => {
-    if (!(await confirmAction("Abmelden", "Aktuelle Sitzung beenden?", "Abmelden"))) return;
+    if (!(await confirmAction("Sign out", "End the current session?", "Sign out"))) return;
     await api("/api/auth/logout", { method: "POST", body: "{}" }).catch(() => {});
     state.user = null;
     state.keys = [];
@@ -364,7 +364,7 @@ function bindEvents() {
   el.detailReveal.addEventListener("click", toggleReveal);
   el.detailCopy.addEventListener("click", copyActiveKey);
   el.detailShare.addEventListener("click", createShareLink);
-  el.detailShareCopy.addEventListener("click", () => copyText(el.detailShareLink.value, "Share-Link kopiert"));
+  el.detailShareCopy.addEventListener("click", () => copyText(el.detailShareLink.value, "Share link copied"));
   el.detailRedeem.addEventListener("click", () => redeem(state.activeIndex, el.detailRedeem));
   el.detailUnredeem.addEventListener("click", () => unredeem(state.activeIndex, el.detailUnredeem));
   el.detailRequestReactivation.addEventListener("click", requestReactivation);
@@ -387,7 +387,7 @@ function bindEvents() {
 }
 
 async function loadKeys() {
-  el.rows.innerHTML = '<li class="keyku-empty">Lade Vault...</li>';
+  el.rows.innerHTML = '<li class="keyku-empty">Loading vault...</li>';
   try {
     const data = await api("/api/keys");
     state.keys = data.keys || [];
@@ -423,13 +423,13 @@ function renderKeys() {
   el.statFree.textContent = String(free);
   el.statUsed.textContent = String(used);
   el.statTotal.textContent = String(state.keys.length);
-  el.summary.textContent = `${free} frei · ${used} benutzt · ${state.keys.length} gesamt`;
+  el.summary.textContent = `${free} frei Â· ${used} benutzt Â· ${state.keys.length} gesamt`;
 
   if (!state.keys.length) {
     el.rows.innerHTML = `<li class="keyku-empty">
       <div class="psu-logo-frame" aria-hidden="true"><img src="/assets/logos/keyku.png" alt="" /></div>
       <strong>Noch keine Keys</strong>
-      <span>Admins können Keys direkt im Vault anlegen.</span>
+      <span>Admins can create keys directly in the vault.</span>
     </li>`;
     return;
   }
@@ -441,28 +441,28 @@ function renderKeys() {
   if (query) visible = visible.filter((entry) => normalize(entry.game).includes(query));
 
   if (!visible.length) {
-    el.rows.innerHTML = '<li class="keyku-empty">Keine passenden Einträge.</li>';
+    el.rows.innerHTML = '<li class="keyku-empty">No matching entries.</li>';
     return;
   }
 
   el.rows.innerHTML = visible.map((entry) => {
-    const status = entry.redeemed ? "Benutzt" : "Frei";
+    const status = entry.redeemed ? "Used" : "Free";
     const statusClass = entry.redeemed ? "is-used" : "is-free";
     const redeemedBy = entry.redeemedByName ? ` von ${entry.redeemedByName}` : "";
     const meta = entry.redeemed && entry.redeemedAt
-      ? `Eingelöst ${formatDate(entry.redeemedAt)}${redeemedBy}`
-      : (entry.addedAt ? `Hinzugefügt ${formatDate(entry.addedAt)}` : "Bereit");
+      ? `Redeemed ${formatDate(entry.redeemedAt)}${redeemedBy}`
+      : (entry.addedAt ? `Added ${formatDate(entry.addedAt)}` : "Ready");
     const action = entry.redeemed
-      ? '<span class="psu-button psu-button--tonal keyku-row-button">Öffnen</span>'
-      : '<button class="psu-button psu-button--filled keyku-row-button" type="button" data-action="redeem">Einlösen</button>';
+      ? '<span class="psu-button psu-button--tonal keyku-row-button">Open</span>'
+      : '<button class="psu-button psu-button--filled keyku-row-button" type="button" data-action="redeem">Redeem</button>';
     return `
       <li class="keyku-key-row ${entry.redeemed ? "is-muted" : ""}" data-index="${entry.index}" tabindex="0">
         <span class="keyku-row-number">${String(entry.index + 1).padStart(2, "0")}</span>
         <span class="keyku-row-main">
-          <strong>${escapeHtml(entry.game || "Unbenannt")}</strong>
+          <strong>${escapeHtml(entry.game || "Untitled")}</strong>
           <small>${escapeHtml(meta)}</small>
         </span>
-        <span class="keyku-secret-preview">•••••-•••••-•••••</span>
+        <span class="keyku-secret-preview">â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢</span>
         <span class="keyku-status ${statusClass}">${status}</span>
         <span class="keyku-row-actions">${action}</span>
       </li>`;
@@ -506,7 +506,7 @@ function openDetail(index) {
   state.activeSecret = "";
   el.detailTitle.textContent = entry.game || "Key";
   el.detailGame.value = entry.game || "";
-  el.detailKey.value = "•••••-•••••-•••••";
+  el.detailKey.value = "â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢";
   el.detailKey.type = "password";
   el.detailAdded.value = toDateTimeLocal(entry.addedAt);
   el.detailRedeemed.value = toDateTimeLocal(entry.redeemedAt);
@@ -560,7 +560,7 @@ async function revealActiveKey() {
 async function toggleReveal() {
   if (el.detailKey.type === "text") {
     el.detailKey.type = "password";
-    if (!state.creating) el.detailKey.value = "•••••-•••••-•••••";
+    if (!state.creating) el.detailKey.value = "â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢";
     el.detailReveal.textContent = "Anzeigen";
     return;
   }
@@ -587,7 +587,7 @@ async function copyText(text, successMessage) {
     textarea.select();
     const copied = document.execCommand && document.execCommand("copy");
     textarea.remove();
-    showToast(copied ? successMessage : "Kopieren fehlgeschlagen", copied ? "success" : "error");
+    showToast(copied ? successMessage : "Copy failed", copied ? "success" : "error");
     return Boolean(copied);
   }
 }
@@ -595,7 +595,7 @@ async function copyText(text, successMessage) {
 async function copyActiveKey() {
   try {
     const key = await revealActiveKey();
-    await copyText(key, "Key kopiert");
+    await copyText(key, "Key copied");
   } catch (error) {
     showToast(error.message, "error");
   }
@@ -610,7 +610,7 @@ async function createShareLink() {
     el.shareLinkRow.hidden = false;
     el.detailShareLink.focus();
     el.detailShareLink.select();
-    showToast("Share-Link erstellt", "success");
+    showToast("Share link created", "success");
   } catch (error) {
     showToast(error.message, "error");
   } finally {
@@ -636,7 +636,7 @@ async function redeem(index, button) {
 }
 
 async function unredeem(index, button) {
-  if (!(await confirmAction("Key reaktivieren", "Diesen Key wieder als frei markieren?", "Reaktivieren"))) return;
+  if (!(await confirmAction("Reactivate key", "Mark this key as free again?", "Reactivate"))) return;
   button.disabled = true;
   try {
     await api(`/api/unredeem/${encodeURIComponent(index)}`, { method: "POST", body: "{}" });
@@ -655,7 +655,7 @@ async function requestReactivation() {
   el.detailRequestReactivation.disabled = true;
   try {
     await api(`/api/keys/${encodeURIComponent(state.activeIndex)}/reactivation-request`, { method: "POST", body: "{}" });
-    showToast("Anfrage gesendet", "success");
+    showToast("Request sent", "success");
   } catch (error) {
     showToast(error.message, "error");
   } finally {
@@ -665,11 +665,11 @@ async function requestReactivation() {
 
 async function deleteActiveKey() {
   const entry = currentEntry();
-  if (!(await confirmAction("Key löschen", `"${entry?.game || "Unbenannt"}" dauerhaft löschen?`, "Löschen"))) return;
+  if (!(await confirmAction("Delete key", `Delete "${entry?.game || "Untitled"}" permanently?`, "Delete"))) return;
   el.detailDelete.disabled = true;
   try {
     await api(`/api/admin/keys/${encodeURIComponent(state.activeIndex)}`, { method: "DELETE" });
-    showToast("Key gelöscht", "success");
+    showToast("Key deleted", "success");
     closeSheet("#detail-dialog");
     await loadKeys();
   } catch (error) {
@@ -689,13 +689,13 @@ async function saveKey(event) {
       addedAt: fromDateTimeLocal(el.detailAdded.value),
       redeemedAt: fromDateTimeLocal(el.detailRedeemed.value),
     };
-    if (state.creating || state.activeSecret || el.detailKey.value !== "•••••-•••••-•••••") {
+    if (state.creating || state.activeSecret || el.detailKey.value !== "â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢-â€¢â€¢â€¢â€¢â€¢") {
       body.key = el.detailKey.value.trim();
     }
     const path = state.creating ? "/api/admin/keys" : `/api/admin/keys/${encodeURIComponent(state.activeIndex)}`;
     const method = state.creating ? "POST" : "PATCH";
     const data = await api(path, { method, body: JSON.stringify(body) });
-    showToast(state.creating ? "Key erstellt" : "Key gespeichert", "success");
+    showToast(state.creating ? "Key created" : "Key saved", "success");
     await loadKeys();
     openDetail(data.key.index);
   } catch (error) {
@@ -707,7 +707,7 @@ async function saveKey(event) {
 
 async function loadNotifications() {
   if (state.user?.role !== "admin") return;
-  el.notificationsBody.innerHTML = '<div class="keyku-empty">Lade Benachrichtigungen...</div>';
+  el.notificationsBody.innerHTML = '<div class="keyku-empty">Loading notifications...</div>';
   try {
     const data = await api("/api/admin/notifications");
     updateNotificationIndicator(data.notificationCount || 0);
@@ -726,25 +726,25 @@ function renderNotifications(data) {
       <article class="psu-card keyku-list-card">
         <div><strong>${escapeHtml(user.username)}</strong><small>Registriert ${formatDate(user.createdAt)}</small></div>
         <div class="psu-card-actions">
-          <button class="psu-button psu-button--filled" data-user-approve="${escapeHtml(user.id)}" type="button">Freigeben</button>
-          <button class="psu-button psu-button--danger" data-user-reject="${escapeHtml(user.id)}" type="button">Ablehnen</button>
+          <button class="psu-button psu-button--filled" data-user-approve="${escapeHtml(user.id)}" type="button">Freegeben</button>
+          <button class="psu-button psu-button--danger" data-user-reject="${escapeHtml(user.id)}" type="button">Reject</button>
         </div>
       </article>`)}
     ${notificationSection("Reaktivierung", reactivations, (request) => `
       <article class="psu-card keyku-list-card">
-        <div><strong>${escapeHtml(request.game || "Unbenannt")}</strong><small>${escapeHtml(request.requestedByName || "Unbekannt")} · ${formatDate(request.createdAt)}</small></div>
+        <div><strong>${escapeHtml(request.game || "Untitled")}</strong><small>${escapeHtml(request.requestedByName || "Unbekannt")} Â· ${formatDate(request.createdAt)}</small></div>
         <div class="psu-card-actions">
-          <button class="psu-button psu-button--filled" data-reactivation-approve="${escapeHtml(request.id)}" type="button">Freigeben</button>
-          <button class="psu-button psu-button--danger" data-reactivation-reject="${escapeHtml(request.id)}" type="button">Ablehnen</button>
+          <button class="psu-button psu-button--filled" data-reactivation-approve="${escapeHtml(request.id)}" type="button">Freegeben</button>
+          <button class="psu-button psu-button--danger" data-reactivation-reject="${escapeHtml(request.id)}" type="button">Reject</button>
         </div>
       </article>`)}
-    ${notificationSection("Passwort", resets, (request) => `
+    ${notificationSection("Password", resets, (request) => `
       <article class="psu-card keyku-list-card">
         <div><strong>${escapeHtml(request.username)}</strong><small>${formatDate(request.createdAt)}</small></div>
         <div class="keyku-inline-field">
-          <input class="psu-input" type="password" minlength="10" placeholder="Neues Passwort" data-reset-input="${escapeHtml(request.id)}" />
+          <input class="psu-input" type="password" minlength="10" placeholder="Neues Password" data-reset-input="${escapeHtml(request.id)}" />
           <button class="psu-button psu-button--filled" data-reset-complete="${escapeHtml(request.id)}" type="button">Setzen</button>
-          <button class="psu-button psu-button--danger" data-reset-reject="${escapeHtml(request.id)}" type="button">Ablehnen</button>
+          <button class="psu-button psu-button--danger" data-reset-reject="${escapeHtml(request.id)}" type="button">Reject</button>
         </div>
       </article>`)}
   `;
@@ -754,7 +754,7 @@ function notificationSection(title, items, render) {
   return `
     <section class="keyku-section-stack">
       <h3 class="keyku-section-title">${escapeHtml(title)} <span>${items.length}</span></h3>
-      ${items.length ? items.map(render).join("") : '<div class="keyku-empty is-compact">Keine offenen Einträge.</div>'}
+      ${items.length ? items.map(render).join("") : '<div class="keyku-empty is-compact">No open items.</div>'}
     </section>`;
 }
 
@@ -793,11 +793,11 @@ async function notificationsClick(event) {
 }
 
 async function loadSettings() {
-  el.settingsBody.innerHTML = '<div class="keyku-empty">Lade Einstellungen...</div>';
+  el.settingsBody.innerHTML = '<div class="keyku-empty">Loading settings...</div>';
   try {
     const [settings, info, users] = await Promise.all([
       state.user?.role === "admin" ? api("/api/admin/settings") : Promise.resolve(null),
-      state.user?.role === "admin" ? api("/api/admin/info") : Promise.resolve(null),
+      state.user?.role === "admin" ? api("/api/admin/info") : api("/api/app/about"),
       state.user?.role === "admin" ? api("/api/admin/users") : Promise.resolve({ users: [] }),
     ]);
     renderSettings(settings, info, users.users || []);
@@ -815,12 +815,18 @@ function renderSettings(settings, info, users) {
       <div class="psu-logo-frame" aria-hidden="true"><img src="/assets/logos/keyku.png" alt="" /></div>
       <div>
         <h3 class="psu-card-title">Keyku - Key Vault</h3>
-        <p class="psu-card-text">Teil der ishiku-Familie.</p>
+        <p class="psu-card-text">Part of the ishiku family.</p>
       </div>
     </section>
+    <section class="psu-technical-card keyku-section-stack">
+      <h3 class="psu-card-title">About</h3>
+      ${technicalRow("Version", info?.app?.version)}
+      ${technicalRow("Build date", info?.app?.buildDate || "local")}
+      ${technicalRow("Git SHA", info?.app?.gitSha || "local")}
+    </section>
     <section class="psu-card keyku-section-stack">
-      <h3 class="psu-card-title">Darstellung</h3>
-      <div class="psu-chip-group" role="group" aria-label="Theme wählen">
+      <h3 class="psu-card-title">Appearance</h3>
+      <div class="psu-chip-group" role="group" aria-label="Choose theme">
         ${themeButton("lavender", "Lavender", theme)}
         ${themeButton("mint", "Mint", theme)}
         ${themeButton("sky", "Sky", theme)}
@@ -828,10 +834,10 @@ function renderSettings(settings, info, users) {
         ${themeButton("rose", "Rose", theme)}
         ${themeButton("graphite", "Graphite", theme)}
       </div>
-      <div class="psu-segmented-control" role="tablist" aria-label="Modus wählen">
+      <div class="psu-segmented-control" role="tablist" aria-label="Choose mode">
         ${modeButton("system", "System", mode)}
-        ${modeButton("light", "Hell", mode)}
-        ${modeButton("dark", "Dunkel", mode)}
+        ${modeButton("light", "Light", mode)}
+        ${modeButton("dark", "Dark", mode)}
       </div>
     </section>
     ${adminHtml}
@@ -852,34 +858,34 @@ function adminSettingsHtml(settings, info, users) {
   return `
     <section class="keyku-stat-grid">
       <article class="psu-card keyku-stat"><span>Keys</span><strong>${keys.total ?? 0}</strong></article>
-      <article class="psu-card keyku-stat"><span>Frei</span><strong>${keys.free ?? 0}</strong></article>
-      <article class="psu-card keyku-stat"><span>Anfragen</span><strong>${(requests.pendingReactivations ?? 0) + (requests.pendingPasswordResets ?? 0)}</strong></article>
+      <article class="psu-card keyku-stat"><span>Free</span><strong>${keys.free ?? 0}</strong></article>
+      <article class="psu-card keyku-stat"><span>Requests</span><strong>${(requests.pendingReactivations ?? 0) + (requests.pendingPasswordResets ?? 0)}</strong></article>
     </section>
     <section class="psu-card keyku-section-stack">
-      <h3 class="psu-card-title">Konto erstellen</h3>
+      <h3 class="psu-card-title">Create account</h3>
       <form id="admin-create-user-form" class="keyku-form-grid">
-        <input class="psu-input" name="displayName" placeholder="Anzeigename" required />
-        <input class="psu-input" name="username" placeholder="Benutzername" required minlength="3" maxlength="32" />
-        <input class="psu-input" name="email" placeholder="E-Mail optional" type="email" />
+        <input class="psu-input" name="displayName" placeholder="Display name" required />
+        <input class="psu-input" name="username" placeholder="Username" required minlength="3" maxlength="32" />
+        <input class="psu-input" name="email" placeholder="Email optional" type="email" />
         <select class="psu-input" name="role"><option value="user">User</option><option value="admin">Admin</option></select>
-        <input class="psu-input" name="password" placeholder="Initiales Passwort" type="password" required minlength="12" />
-        <button class="psu-button psu-button--filled" type="submit">Konto erstellen</button>
+        <input class="psu-input" name="password" placeholder="Initial password" type="password" required minlength="12" />
+        <button class="psu-button psu-button--filled" type="submit">Create account</button>
       </form>
     </section>
     <section class="psu-card keyku-section-stack">
-      <h3 class="psu-card-title">Konten</h3>
-      ${users.map((user) => `<article class="keyku-compact-row"><strong>${escapeHtml(user.displayName || user.username)}</strong><span>${escapeHtml(user.username)} · ${escapeHtml(user.role)}</span></article>`).join("") || '<div class="keyku-empty is-compact">Keine Konten.</div>'}
+      <h3 class="psu-card-title">Accounts</h3>
+      ${users.map((user) => `<article class="keyku-compact-row"><strong>${escapeHtml(user.displayName || user.username)}</strong><span>${escapeHtml(user.username)} - ${escapeHtml(user.role)}</span></article>`).join("") || '<div class="keyku-empty is-compact">No accounts.</div>'}
     </section>
     <section class="psu-card keyku-section-stack">
-      <h3 class="psu-card-title">Wartung</h3>
+      <h3 class="psu-card-title">Maintenance</h3>
       <div class="psu-card-actions">
-        <button class="psu-button psu-button--danger" data-maintenance="delete-used" type="button">Benutzte Keys löschen</button>
-        <button class="psu-button psu-button--tonal" data-maintenance="reactivate-used" type="button">Benutzte Keys reaktivieren</button>
-        <button class="psu-button psu-button--tonal" data-maintenance="clear-resolved" type="button">Erledigte Anfragen löschen</button>
+        <button class="psu-button psu-button--danger" data-maintenance="delete-used" type="button">Delete used keys</button>
+        <button class="psu-button psu-button--tonal" data-maintenance="reactivate-used" type="button">Reactivate used keys</button>
+        <button class="psu-button psu-button--tonal" data-maintenance="clear-resolved" type="button">Clear resolved requests</button>
       </div>
     </section>
     <section class="psu-technical-card keyku-section-stack">
-      <h3 class="psu-card-title">Admin-Info</h3>
+      <h3 class="psu-card-title">Admin Info</h3>
       ${technicalRow("App", info?.app?.name)}
       ${technicalRow("Version", info?.app?.version)}
       ${technicalRow("Build", info?.app?.buildDate || "local")}
@@ -889,7 +895,7 @@ function adminSettingsHtml(settings, info, users) {
       ${technicalRow("Setup", info?.health?.setup?.setupCompleted ? "completed" : "pending")}
       ${technicalRow("Health", info?.health?.status)}
       ${technicalRow("Log Level", info?.runtime?.logLevel)}
-      <button class="psu-button psu-button--outlined" data-copy-admin-info type="button">Debug-Details kopieren</button>
+      <button class="psu-button psu-button--outlined" data-copy-admin-info type="button">Copy debug details</button>
     </section>`;
 }
 
@@ -913,24 +919,24 @@ async function settingsClick(event) {
     return;
   }
   if (copyAdmin) {
-    await copyText(el.settingsBody.querySelector(".psu-technical-card").innerText, "Debug-Details kopiert");
+    await copyText(el.settingsBody.querySelector(".psu-technical-card").innerText, "Debug details copied");
     return;
   }
   if (maintenance) {
     const action = maintenance.dataset.maintenance;
     const messages = {
-      "delete-used": "Alle benutzten Keys dauerhaft löschen?",
-      "reactivate-used": "Alle benutzten Keys wieder als frei markieren?",
-      "clear-resolved": "Alle erledigten Anfragen löschen?",
+      "delete-used": "Permanently delete all used keys?",
+      "reactivate-used": "Mark all used keys as free again?",
+      "clear-resolved": "Clear all resolved requests?",
     };
-    if (!(await confirmAction("Wartung", messages[action], "Ausführen"))) return;
+    if (!(await confirmAction("Maintenance", messages[action], "Run"))) return;
     const paths = {
       "delete-used": "/api/admin/maintenance/delete-used-keys",
       "reactivate-used": "/api/admin/maintenance/reactivate-used-keys",
       "clear-resolved": "/api/admin/maintenance/clear-resolved-requests",
     };
     await api(paths[action], { method: "POST", body: "{}" });
-    showToast("Wartung abgeschlossen", "success");
+    showToast("Maintenance completed", "success");
     await loadSettings();
     await loadKeys();
   }
@@ -955,7 +961,7 @@ document.addEventListener("submit", async (event) => {
       }),
     });
     form.reset();
-    showToast("Konto erstellt", "success");
+    showToast("Account created", "success");
     await loadSettings();
   } catch (error) {
     showToast(error.message, "error");
@@ -980,7 +986,7 @@ function closeAllSheets() {
   $$(".psu-backdrop:not([hidden])").forEach((sheet) => { sheet.hidden = true; });
 }
 
-function confirmAction(title, message, confirmLabel = "Ausführen") {
+function confirmAction(title, message, confirmLabel = "Run") {
   return new Promise((resolve) => {
     el.confirmTitle.textContent = title;
     el.confirmMessage.textContent = message;
@@ -1007,5 +1013,5 @@ function confirmAction(title, message, confirmLabel = "Ausführen") {
 
 bootstrap().catch((error) => {
   console.error(error);
-  showToast("Keyku konnte nicht starten", "error");
+  showToast("Keyku could not start", "error");
 });

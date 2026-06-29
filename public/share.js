@@ -1,4 +1,4 @@
-import { initPixelSoftUtilityTheme } from "./design-system/theme-controller.js";
+﻿import { initPixelSoftUtilityTheme } from "./design-system/theme-controller.js";
 
 const token = decodeURIComponent(window.location.pathname.split("/").filter(Boolean).pop() || "");
 const title = document.querySelector("#share-title");
@@ -36,13 +36,13 @@ function formatDate(iso) {
   if (!iso) return "";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
+  return date.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 async function copy(text) {
   try {
     await navigator.clipboard.writeText(text);
-    showToast("Key kopiert", "success");
+    showToast("Key copied", "success");
   } catch (_) {
     showToast(text, "success");
   }
@@ -52,20 +52,20 @@ async function loadShare() {
   try {
     const response = await fetch(`/api/share/${encodeURIComponent(token)}`, { cache: "no-store" });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Share-Link nicht gefunden");
+    if (!response.ok) throw new Error(data.error || "Share link not found");
     sharedKey = data.key;
     title.textContent = data.game || "Steam-Key";
     meta.textContent = data.redeemed && data.redeemedAt
-      ? `Eingelöst am ${formatDate(data.redeemedAt)}`
-      : "Öffentlicher Key-Link";
+      ? `Redeemed on ${formatDate(data.redeemedAt)}`
+      : "Public key link";
     keyBox.textContent = data.key;
     redeemLink.href = data.redeemUrl;
     steamLink.href = data.steamUrl;
     steamDbLink.href = data.steamDbUrl;
   } catch (error) {
-    title.textContent = "Ungültiger Share-Link";
+    title.textContent = "Invalid share link";
     meta.textContent = "Keyku - Key Vault";
-    keyBox.textContent = "Nicht gefunden";
+    keyBox.textContent = "Not found";
     errorBox.textContent = error.message;
     copyButton.disabled = true;
     [redeemLink, steamLink, steamDbLink].forEach((link) => {
