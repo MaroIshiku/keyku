@@ -250,7 +250,8 @@
   gap: var(--space-4);
   overflow: auto;
   max-block-size: min(720px, calc(100dvh - 150px));
-  padding-block-start: var(--space-3);
+  margin-inline: calc(var(--space-1) * -1);
+  padding: var(--space-3) var(--space-1) var(--space-1);
 }
 
 .keyku-form-grid {

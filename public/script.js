@@ -4,7 +4,7 @@ import { setPixelSoftUtilityMode, setPixelSoftUtilityTheme } from "./design-syst
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
-const MASKED_KEY = "\u25CF\u25CF\u25CF\u25CF-\u25CF\u25CF\u25CF\u25CF-\u25CF\u25CF\u25CF\u25CF";
+const MASKED_KEY = "\u25CF\u25CF\u25CF\u25CF\u25CF - \u25CF\u25CF\u25CF\u25CF\u25CF - \u25CF\u25CF\u25CF\u25CF\u25CF";
 
 const appConfig = JSON.parse($("script[data-psu-app-config]").textContent);
 const state = {
@@ -867,6 +867,7 @@ async function loadSettings() {
 function renderSettings({ settings = null, info = null, users = [] } = {}) {
   el.settingsTitle.textContent = {
     account: "Account",
+    appearance: "Appearance",
     about: "About",
     admin: "Admin",
   }[state.settingsMode] || "Account";
@@ -878,12 +879,14 @@ function renderSettings({ settings = null, info = null, users = [] } = {}) {
     el.settingsBody.innerHTML = aboutSettingsHtml(info);
     return;
   }
+  if (state.settingsMode === "appearance") {
+    el.settingsBody.innerHTML = appearanceSettingsHtml();
+    return;
+  }
   el.settingsBody.innerHTML = accountSettingsHtml();
 }
 
 function accountSettingsHtml() {
-  const theme = document.documentElement.dataset.theme;
-  const mode = document.documentElement.dataset.mode;
   return `
     <form id="account-settings-form" class="psu-card keyku-section-stack">
       <h3 class="psu-card-title">Account settings</h3>
@@ -913,6 +916,13 @@ function accountSettingsHtml() {
       </label>
       <button class="psu-button psu-button--filled" type="submit">Save account</button>
     </form>
+  `;
+}
+
+function appearanceSettingsHtml() {
+  const theme = document.documentElement.dataset.theme;
+  const mode = document.documentElement.dataset.mode;
+  return `
     <section class="psu-card keyku-section-stack">
       <h3 class="psu-card-title">Appearance</h3>
       <div class="psu-chip-group" role="group" aria-label="Choose theme">
