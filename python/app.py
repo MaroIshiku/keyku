@@ -147,6 +147,10 @@ def validate_credentials(username, password, min_password_length=10):
     return validate_password(password, min_password_length)
 
 
+def validate_username(username):
+    return validate_credentials(username, "temporary-valid-password", min_password_length=12)
+
+
 def hash_password(password, salt=None, iterations=310000):
     clean_salt = salt or secrets.token_urlsafe(16)
     digest = hashlib.pbkdf2_hmac("sha256", str(password).encode("utf-8"), clean_salt.encode("utf-8"), int(iterations), dklen=32)
@@ -710,6 +714,54 @@ def password_reset_request():
 def auth_logout():
     response = make_response(jsonify({"ok": True}))
     return clear_session_cookie(response)
+
+
+@app.patch("/api/account")
+def account_update():
+    current, error = require_auth()
+    if error:
+        return error
+    body = json_body()
+    username = normalize_username(body.get("username") or current.get("username"))
+    display_name = str(body.get("displayName") or "").strip()
+    email = str(body.get("email") or "").strip()
+    new_password = str(body.get("newPassword") or "")
+    password_confirm = str(body.get("passwordConfirm") or "")
+    current_password = str(body.get("currentPassword") or "")
+
+    credential_error = validate_username(username)
+    if credential_error:
+        return jsonify({"error": credential_error}), 400
+    if not display_name or len(display_name) > 80:
+        return jsonify({"error": "Display name is required and must be at most 80 characters."}), 400
+    if len(email) > 180:
+        return jsonify({"error": "Email address is too long."}), 400
+    if new_password:
+        password_error = validate_credentials(username, new_password, min_password_length=12)
+        if password_error:
+            return jsonify({"error": password_error}), 400
+        if new_password != password_confirm:
+            return jsonify({"error": "Password confirmation does not match."}), 400
+        normalized_password = new_password.strip().lower()
+        if normalized_password in PLACEHOLDER_PASSWORDS or normalized_password in {username, APP_ID, APP_NAME.lower()}:
+            return jsonify({"error": "Please choose a stronger password."}), 400
+        if not verify_password(current_password, current):
+            return jsonify({"error": "Current password is incorrect."}), 403
+
+    with file_lock:
+        data = read_users()
+        user = next((candidate for candidate in data["users"] if candidate.get("id") == current.get("id")), None)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        if any(candidate.get("id") != user.get("id") and candidate.get("username") == username for candidate in data["users"]):
+            return jsonify({"error": "This username is already taken."}), 409
+        user["username"] = username
+        user["displayName"] = display_name
+        user["email"] = email
+        if new_password:
+            set_user_password(user, new_password, user["id"])
+        write_users(data)
+    return jsonify({"ok": True, "user": public_user(user)})
 
 
 @app.get("/api/admin/notifications")

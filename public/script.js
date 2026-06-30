@@ -4,7 +4,7 @@ import { setPixelSoftUtilityMode, setPixelSoftUtilityTheme } from "./design-syst
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
-const MASKED_KEY = "*****-*****-*****";
+const MASKED_KEY = "\u25CF\u25CF\u25CF\u25CF-\u25CF\u25CF\u25CF\u25CF-\u25CF\u25CF\u25CF\u25CF";
 
 const appConfig = JSON.parse($("script[data-psu-app-config]").textContent);
 const state = {
@@ -17,6 +17,7 @@ const state = {
   activeIndex: null,
   activeSecret: "",
   creating: false,
+  settingsMode: "account",
 };
 
 const views = {
@@ -64,6 +65,7 @@ const el = {
   notificationBadge: $("#notification-badge"),
   profileNotificationsRow: $("#profile-notifications-row"),
   notificationsBody: $("#notifications-body"),
+  settingsTitle: $("#settings-title"),
   settingsBody: $("#settings-body"),
   detailDialog: $("#detail-dialog"),
   keyForm: $("#key-form"),
@@ -417,7 +419,13 @@ function bindEvents() {
 
   $("#settings-sheet").addEventListener("click", settingsClick);
   $("#notifications-sheet").addEventListener("click", notificationsClick);
-  $("[data-psu-open='#settings-sheet']").addEventListener("click", loadSettings);
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-settings-mode]");
+    if (!trigger) return;
+    state.settingsMode = trigger.dataset.settingsMode || "account";
+    closeSheet("#profile-sheet");
+    loadSettings();
+  });
   el.notificationsButton.addEventListener("click", loadNotifications);
   el.profileNotificationsRow.addEventListener("click", loadNotifications);
 
@@ -837,35 +845,74 @@ async function notificationsClick(event) {
 async function loadSettings() {
   el.settingsBody.innerHTML = '<div class="keyku-empty">Loading settings...</div>';
   try {
-    const [settings, info, users] = await Promise.all([
-      state.user?.role === "admin" ? api("/api/admin/settings") : Promise.resolve(null),
-      state.user?.role === "admin" ? api("/api/admin/info") : api("/api/app/about"),
-      state.user?.role === "admin" ? api("/api/admin/users") : Promise.resolve({ users: [] }),
-    ]);
-    renderSettings(settings, info, users.users || []);
+    if (state.settingsMode === "admin" && state.user?.role !== "admin") state.settingsMode = "account";
+    if (state.settingsMode === "admin") {
+      const [settings, info, users] = await Promise.all([
+        api("/api/admin/settings"),
+        api("/api/admin/info"),
+        api("/api/admin/users"),
+      ]);
+      renderSettings({ settings, info, users: users.users || [] });
+      return;
+    }
+    const info = state.settingsMode === "about"
+      ? await api("/api/app/about")
+      : null;
+    renderSettings({ info });
   } catch (error) {
     el.settingsBody.innerHTML = `<div class="keyku-empty is-error">${escapeHtml(error.message)}</div>`;
   }
 }
 
-function renderSettings(settings, info, users) {
+function renderSettings({ settings = null, info = null, users = [] } = {}) {
+  el.settingsTitle.textContent = {
+    account: "Account",
+    about: "About",
+    admin: "Admin",
+  }[state.settingsMode] || "Account";
+  if (state.settingsMode === "admin") {
+    el.settingsBody.innerHTML = adminSettingsHtml(settings, info, users);
+    return;
+  }
+  if (state.settingsMode === "about") {
+    el.settingsBody.innerHTML = aboutSettingsHtml(info);
+    return;
+  }
+  el.settingsBody.innerHTML = accountSettingsHtml();
+}
+
+function accountSettingsHtml() {
   const theme = document.documentElement.dataset.theme;
   const mode = document.documentElement.dataset.mode;
-  const adminHtml = state.user?.role === "admin" ? adminSettingsHtml(settings, info, users) : "";
-  el.settingsBody.innerHTML = `
-    <section class="psu-card keyku-identity-card">
-      <div class="psu-logo-frame" aria-hidden="true"><img src="/assets/logos/keyku.png" alt="" /></div>
-      <div>
-        <h3 class="psu-card-title">Keyku - Key Vault</h3>
-        <p class="psu-card-text">Part of the ishiku family.</p>
-      </div>
-    </section>
-    <section class="psu-technical-card keyku-section-stack">
-      <h3 class="psu-card-title">About</h3>
-      ${technicalRow("Version", info?.app?.version)}
-      ${technicalRow("Build date", info?.app?.buildDate || "local")}
-      ${technicalRow("Git SHA", info?.app?.gitSha || "local")}
-    </section>
+  return `
+    <form id="account-settings-form" class="psu-card keyku-section-stack">
+      <h3 class="psu-card-title">Account settings</h3>
+      <label class="psu-field">
+        <span class="psu-label">Display name</span>
+        <input class="psu-input" name="displayName" autocomplete="name" maxlength="80" required value="${escapeHtml(state.user?.displayName || "")}" />
+      </label>
+      <label class="psu-field">
+        <span class="psu-label">Username</span>
+        <input class="psu-input" name="username" autocomplete="username" minlength="3" maxlength="32" required value="${escapeHtml(state.user?.username || "")}" />
+      </label>
+      <label class="psu-field">
+        <span class="psu-label">Email optional</span>
+        <input class="psu-input" name="email" type="email" autocomplete="email" maxlength="180" value="${escapeHtml(state.user?.email || "")}" />
+      </label>
+      <label class="psu-field">
+        <span class="psu-label">Current password</span>
+        <input class="psu-input" name="currentPassword" type="password" autocomplete="current-password" />
+      </label>
+      <label class="psu-field">
+        <span class="psu-label">New password optional</span>
+        <input class="psu-input" name="newPassword" type="password" autocomplete="new-password" minlength="12" />
+      </label>
+      <label class="psu-field">
+        <span class="psu-label">Repeat new password</span>
+        <input class="psu-input" name="passwordConfirm" type="password" autocomplete="new-password" minlength="12" />
+      </label>
+      <button class="psu-button psu-button--filled" type="submit">Save account</button>
+    </form>
     <section class="psu-card keyku-section-stack">
       <h3 class="psu-card-title">Appearance</h3>
       <div class="psu-chip-group" role="group" aria-label="Choose theme">
@@ -882,7 +929,24 @@ function renderSettings(settings, info, users) {
         ${modeButton("dark", "Dark", mode)}
       </div>
     </section>
-    ${adminHtml}
+  `;
+}
+
+function aboutSettingsHtml(info) {
+  return `
+    <section class="psu-card keyku-identity-card">
+      <div class="psu-logo-frame" aria-hidden="true"><img src="/assets/logos/keyku.png" alt="" /></div>
+      <div>
+        <h3 class="psu-card-title">Keyku</h3>
+        <p class="psu-card-text">Key Vault</p>
+      </div>
+    </section>
+    <section class="psu-technical-card keyku-section-stack">
+      <h3 class="psu-card-title">About</h3>
+      ${technicalRow("Version", info?.app?.version)}
+      ${technicalRow("Build date", info?.app?.buildDate || "local")}
+      ${technicalRow("Git SHA", info?.app?.gitSha || "local")}
+    </section>
   `;
 }
 
@@ -926,7 +990,7 @@ function adminSettingsHtml(settings, info, users) {
         <button class="psu-button psu-button--tonal" data-maintenance="clear-resolved" type="button">Clear resolved requests</button>
       </div>
     </section>
-    <section class="psu-technical-card keyku-section-stack">
+    <section class="psu-technical-card keyku-section-stack keyku-admin-info-card">
       <h3 class="psu-card-title">Admin Info</h3>
       ${technicalRow("App", info?.app?.name)}
       ${technicalRow("Version", info?.app?.version)}
@@ -961,7 +1025,7 @@ async function settingsClick(event) {
     return;
   }
   if (copyAdmin) {
-    await copyText(el.settingsBody.querySelector(".psu-technical-card").innerText, "Debug details copied");
+    await copyText(el.settingsBody.querySelector(".keyku-admin-info-card")?.innerText || "", "Debug details copied");
     return;
   }
   if (maintenance) {
@@ -985,6 +1049,41 @@ async function settingsClick(event) {
 }
 
 document.addEventListener("submit", async (event) => {
+  const accountForm = event.target.closest("#account-settings-form");
+  if (accountForm) {
+    event.preventDefault();
+    const button = accountForm.querySelector("button[type='submit']");
+    button.disabled = true;
+    const data = new FormData(accountForm);
+    try {
+      const result = await api("/api/account", {
+        method: "PATCH",
+        body: JSON.stringify({
+          displayName: data.get("displayName"),
+          username: data.get("username"),
+          email: data.get("email"),
+          currentPassword: data.get("currentPassword"),
+          newPassword: data.get("newPassword"),
+          passwordConfirm: data.get("passwordConfirm"),
+        }),
+      });
+      state.user = result.user;
+      const userInitials = initials(result.user);
+      el.profileButton.textContent = userInitials;
+      el.profileAvatar.textContent = userInitials;
+      el.profileName.textContent = result.user.displayName || result.user.username;
+      el.profileId.textContent = `${result.user.username}${result.user.role === "admin" ? " - Admin" : ""}`;
+      state.settingsMode = "account";
+      await loadSettings();
+      showToast("Account saved", "success");
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      button.disabled = false;
+    }
+    return;
+  }
+
   const form = event.target.closest("#admin-create-user-form");
   if (!form) return;
   event.preventDefault();

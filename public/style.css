@@ -125,6 +125,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: center;
   color: var(--color-on-surface-muted);
   border: 1px solid var(--color-outline);
   border-radius: var(--radius-sm);
@@ -219,6 +220,31 @@
   inline-size: min(100%, 760px);
 }
 
+.keyku-profile-card {
+  inline-size: 100%;
+  border: 0;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.keyku-profile-card:hover {
+  background: var(--color-primary-container);
+}
+
+.keyku-profile-actions {
+  gap: var(--space-2);
+}
+
+.keyku-profile-actions .psu-list-row {
+  min-block-size: 52px;
+}
+
+.keyku-profile-actions .psu-list-row__icon {
+  inline-size: 24px;
+  block-size: 24px;
+}
+
 .keyku-sheet-body {
   display: grid;
   gap: var(--space-4);
@@ -241,6 +267,10 @@
 
 .keyku-inline-field .psu-button {
   white-space: nowrap;
+}
+
+#detail-key {
+  text-align: center;
 }
 
 .keyku-section-stack {
@@ -378,16 +408,32 @@ code {
 
 @media (max-width: 560px) {
   .keyku-stat-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+
+  .keyku-stat {
+    min-block-size: 86px;
+    padding: var(--space-3);
+  }
+
+  .keyku-stat span {
+    font-size: 11px;
+    line-height: 14px;
+  }
+
+  .keyku-stat strong {
+    font-size: 28px;
+    line-height: 34px;
   }
 
   .keyku-key-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      "main"
-      "status"
-      "secret"
-      "actions";
+      "main status"
+      "secret secret"
+      "actions actions";
+    align-items: start;
   }
 
   .keyku-row-number {
@@ -406,5 +452,9 @@ code {
 
   .keyku-status {
     justify-self: start;
+  }
+
+  .keyku-key-row .keyku-status {
+    justify-self: end;
   }
 }
