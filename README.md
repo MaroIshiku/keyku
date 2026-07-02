@@ -42,7 +42,7 @@ The shared themes are Lavender, Mint, Sky, Amber, Rose, and Graphite. System, li
 For ZimaOS, the main Compose file uses absolute host paths:
 
 ```bash
-mkdir -p /DATA/AppData/ish_keyku/data
+mkdir -p /DATA/AppData/keyku/data
 docker compose pull
 docker compose up -d
 ```

@@ -1,10 +1,14 @@
+name: keyku
+
 services:
-  Keyku:
+  keyku:
     image: ghcr.io/maroishiku/keyku:latest
-    container_name: Keyku
+    container_name: keyku
     restart: unless-stopped
     ports:
-      - "8186:3000"
+      - target: 3000
+        published: "8186"
+        protocol: tcp
     environment:
       TZ: "Europe/Berlin"
       ISHIKU_APP_URL: "https://keyku.example.local"
@@ -18,7 +22,9 @@ services:
       # Optional hardened alternative:
       # ISHIKU_SETUP_SECRET_FILE: "/run/secrets/ishiku_setup_secret"
     volumes:
-      - ./data:/data
+      - type: bind
+        source: /DATA/AppData/keyku/data
+        target: /data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3000/healthz', timeout=3).read()"]
       interval: 30s

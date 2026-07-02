@@ -1,12 +1,12 @@
-name: keyku-keyvault
+name: keyku
 services:
-  Keyku:
+  keyku:
     cap_drop:
       - ALL
     cpus: 0.5
     cpu_shares: 90
     command: []
-    container_name: Keyku
+    container_name: keyku
     deploy:
       resources:
         limits:
@@ -37,7 +37,7 @@ services:
       interval: 30s
       retries: 3
       start_period: 10s
-    hostname: Keyku
+    hostname: keyku
     image: ghcr.io/maroishiku/keyku:latest
     init: true
     labels:
@@ -68,15 +68,15 @@ services:
       - /tmp:size=16m,mode=1777
     volumes:
       - type: bind
-        source: /DATA/AppData/ish_keyku/data
+        source: /DATA/AppData/keyku/data
         target: /data
     devices: []
     networks:
-      - Keyku
+      - keyku
     privileged: false
 networks:
-  Keyku:
-    name: Keyku
+  keyku:
+    name: keyku
     driver: bridge
 x-casaos:
   architectures:
@@ -92,10 +92,10 @@ x-casaos:
   icon: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/assets/logos/keyku.png
   index: /
   is_uncontrolled: false
-  main: Keyku
+  main: keyku
   port_map: "8186"
   scheme: http
-  store_app_id: Keyku
+  store_app_id: keyku
   tagline:
     de_de: Privater Steam-Key-Tresor fuer Familie und Freunde.
     en_us: Private Steam key vault for family and friends.
@@ -108,7 +108,7 @@ x-casaos:
         ersten Adminaccounts verwendet.
 
 
-        Persistente Daten liegen auf dem ZimaOS-Host unter /DATA/AppData/ish_keyku/data und werden im Container nach /data gemountet.
+        Persistente Daten liegen auf dem ZimaOS-Host unter /DATA/AppData/keyku/data und werden im Container nach /data gemountet.
 
 
         Veroeffentliche die WebUI ueber HTTPS, wenn du die App ausserhalb deines lokalen Netzes bereitstellst.
@@ -117,7 +117,7 @@ x-casaos:
         starting. This secret is only used to create the first admin account.
 
 
-        Persistent data is stored on the ZimaOS host at /DATA/AppData/ish_keyku/data and mounted into the container at /data.
+        Persistent data is stored on the ZimaOS host at /DATA/AppData/keyku/data and mounted into the container at /data.
 
 
         Publish the WebUI through HTTPS when exposing the app outside your local network.
