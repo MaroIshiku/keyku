@@ -20,7 +20,7 @@
 }
 
 .psu-app-header__inner {
-  min-height: 64px;
+  min-height: var(--app-header-desktop-min-height);
   width: min(100%, var(--layout-desktop-max-width));
   margin-inline: auto;
   display: flex;
@@ -70,7 +70,7 @@
 .psu-logo-frame.psu-logo-missing [data-psu-app-logo] { display: none; }
 
 .psu-app-title-stack { min-width: 0; display: flex; flex-direction: column; }
-.psu-app-title { margin: 0; color: var(--color-on-background); font-size: 18px; line-height: 22px; font-weight: 750; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.psu-app-title { margin: 0; color: var(--color-on-background); font-size: 18px; line-height: 22px; font-weight: 750; letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .psu-app-subtitle { margin: 0; color: var(--color-on-surface-muted); font-size: 13px; line-height: 18px; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .psu-spacer { flex: 1 1 auto; }
 
