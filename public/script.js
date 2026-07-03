@@ -285,7 +285,8 @@ function setAuthMode(mode) {
   const requesting = state.authMode === "request";
   el.authTitle.textContent = requesting ? "Request account" : "Keyku";
   el.authDisplayNameField.hidden = !requesting;
-  el.authEmailField.hidden = !requesting;
+  el.authEmailField.hidden = true;
+  el.authEmail.value = "";
   el.passwordResetRequest.hidden = requesting;
   el.authModeToggle.textContent = requesting ? "Back to sign in" : "Request account";
   el.authSubmit.textContent = requesting ? "Send request" : "Sign in";
