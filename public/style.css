@@ -11,7 +11,11 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
   justify-items: stretch;
-  margin-block-start: var(--space-1);
+  margin-block-start: 0;
+}
+
+#auth-message:empty {
+  display: none;
 }
 
 .keyku-auth-secondary-actions .psu-button {
