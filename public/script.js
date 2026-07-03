@@ -283,7 +283,7 @@ function updateNotificationIndicator(count) {
 function setAuthMode(mode) {
   state.authMode = mode === "request" ? "request" : "login";
   const requesting = state.authMode === "request";
-  el.authTitle.textContent = requesting ? "Request account" : "Sign in";
+  el.authTitle.textContent = requesting ? "Request account" : "Keyku";
   el.authDisplayNameField.hidden = !requesting;
   el.authEmailField.hidden = !requesting;
   el.passwordResetRequest.hidden = requesting;
