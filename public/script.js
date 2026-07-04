@@ -88,7 +88,7 @@ const el = {
   shareLinkRow: $("#share-link-row"),
   detailShareLink: $("#detail-share-link"),
   detailShareCopy: $("#detail-share-copy"),
-  toast: $("#toast"),
+  toast: $("#psu-toast-host"),
   confirmDialog: $("#confirm-dialog"),
   confirmTitle: $("#confirm-title"),
   confirmMessage: $("#confirm-message"),
@@ -163,7 +163,7 @@ function steamDbUrl(game) {
 
 function showToast(message, kind = "default") {
   el.toast.textContent = message;
-  el.toast.className = `keyku-toast is-visible ${kind === "error" ? "is-error" : ""} ${kind === "success" ? "is-success" : ""}`;
+  el.toast.className = `psu-toast-host is-visible ${kind === "error" ? "is-error" : ""} ${kind === "success" ? "is-success" : ""}`;
   clearTimeout(showToast.timer);
   showToast.timer = setTimeout(() => el.toast.classList.remove("is-visible"), 3200);
 }
@@ -421,6 +421,14 @@ function bindEvents() {
   $("#settings-sheet").addEventListener("click", settingsClick);
   $("#notifications-sheet").addEventListener("click", notificationsClick);
   document.addEventListener("click", (event) => {
+    if (event.target.closest("[data-profile-account-open]")) {
+      openInlineAccountEditor();
+      return;
+    }
+    if (event.target.closest("[data-profile-account-back]")) {
+      closeInlineAccountEditor();
+      return;
+    }
     const trigger = event.target.closest("[data-settings-mode]");
     if (!trigger) return;
     state.settingsMode = trigger.dataset.settingsMode || "account";
@@ -436,6 +444,33 @@ function bindEvents() {
       el.search.focus();
     }
   });
+}
+
+function openInlineAccountEditor() {
+  const editor = $("#profile-account-editor");
+  const menu = $("#profile-menu-list");
+  const card = $("#profile-account-card");
+  if (!editor || !menu || !card) return;
+  editor.innerHTML = `
+    <button class="psu-button psu-button--text account-back-button" type="button" data-profile-account-back>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>
+      Account
+    </button>
+    ${accountSettingsHtml()}
+  `;
+  editor.hidden = false;
+  menu.hidden = true;
+  card.hidden = true;
+  requestAnimationFrame(() => editor.querySelector("input")?.focus());
+}
+
+function closeInlineAccountEditor() {
+  const editor = $("#profile-account-editor");
+  const menu = $("#profile-menu-list");
+  const card = $("#profile-account-card");
+  if (editor) editor.hidden = true;
+  if (menu) menu.hidden = false;
+  if (card) card.hidden = false;
 }
 
 async function loadKeys() {

@@ -11,7 +11,11 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
   justify-items: stretch;
-  margin-block-start: var(--space-1);
+  margin-block-start: 0;
+}
+
+#auth-message:empty {
+  display: none;
 }
 
 .keyku-auth-secondary-actions .psu-button {
@@ -258,6 +262,20 @@
   block-size: 24px;
 }
 
+.keyku-profile-inline {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.account-back-button {
+  justify-self: start;
+}
+
+.account-back-button svg {
+  inline-size: 22px;
+  block-size: 22px;
+}
+
 .keyku-sheet-body {
   display: grid;
   gap: var(--space-4);
@@ -343,7 +361,7 @@
   justify-content: flex-end;
 }
 
-.keyku-toast {
+.psu-toast-host {
   position: fixed;
   z-index: 90;
   inset-inline-start: 50%;
@@ -361,16 +379,16 @@
   transition: opacity var(--duration-normal) var(--ease-standard), transform var(--duration-normal) var(--ease-standard);
 }
 
-.keyku-toast.is-visible {
+.psu-toast-host.is-visible {
   opacity: 1;
   transform: translate(-50%, 0);
 }
 
-.keyku-toast.is-success {
+.psu-toast-host.is-success {
   border-color: var(--color-success);
 }
 
-.keyku-toast.is-error {
+.psu-toast-host.is-error {
   border-color: var(--color-danger);
 }
 

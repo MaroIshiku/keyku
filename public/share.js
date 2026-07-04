@@ -9,7 +9,7 @@ const redeemLink = document.querySelector("#share-redeem");
 const steamLink = document.querySelector("#share-steam");
 const steamDbLink = document.querySelector("#share-steamdb");
 const errorBox = document.querySelector("#share-error");
-const toast = document.querySelector("#toast");
+const toast = document.querySelector("#psu-toast-host");
 
 let sharedKey = "";
 
@@ -27,7 +27,7 @@ async function loadIconSprite() {
 
 function showToast(message, kind = "default") {
   toast.textContent = message;
-  toast.className = `keyku-toast is-visible ${kind === "error" ? "is-error" : ""} ${kind === "success" ? "is-success" : ""}`;
+  toast.className = `psu-toast-host is-visible ${kind === "error" ? "is-error" : ""} ${kind === "success" ? "is-success" : ""}`;
   clearTimeout(showToast.timer);
   showToast.timer = setTimeout(() => toast.classList.remove("is-visible"), 3000);
 }
