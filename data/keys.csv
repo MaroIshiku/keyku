@@ -1,3 +1,2 @@
-Game,Key,RedeemedAt,addedAt
-112 Operator,ZDLMR-FB864-VJYVG,2026-05-07T21:22:03.315Z,2026-05-04
-Zombotron,LARKN-0CA3P-0F8QN,2026-06-19T00:00:00.000Z,2026-05-04
+Game,Key,RedeemedAt,addedAt,RedeemedBy,RedeemedByName
+Synthetic Example,DEMO0-DEMO0-DEMO0,,,,

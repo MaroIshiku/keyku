@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "application": {
+    "id": "keyku",
+    "name": "Keyku",
+    "family": "ishiku",
+    "locale": "en"
+  },
+  "summary": "Manage a shared Steam key inventory with administration, public sharing, redemption, and reactivation requests.",
+  "requirements": [
+    {
+      "id": "CORE-001",
+      "title": "Core product behavior",
+      "priority": "critical",
+      "acceptance": [
+        "Manage a shared Steam key inventory with administration, public sharing, redemption, and reactivation requests.",
+        "Existing documented and reachable behavior remains available unless an approved migration decision says otherwise."
+      ],
+      "security_critical": false
+    },
+    {
+      "id": "AUTH-001",
+      "title": "Secure account access",
+      "priority": "critical",
+      "acceptance": [
+        "Account authentication uses generic errors, rate limits, and a supported password hash.",
+        "Sessions are server-side revocable, rotated, time-bounded, cookie-protected, and CSRF-protected."
+      ],
+      "security_critical": true
+    },
+    {
+      "id": "UI-001",
+      "title": "Consistent English interface",
+      "priority": "high",
+      "acceptance": [
+        "All user-facing interface text is English.",
+        "The app uses ishiku semantic tokens, shared layout contracts, responsive behavior, and WCAG 2.2 AA interaction."
+      ],
+      "security_critical": false
+    },
+    {
+      "id": "OPS-001",
+      "title": "Safe standalone operation",
+      "priority": "high",
+      "acceptance": [
+        "A fresh clone can build, test, and run without the outer workspace.",
+        "Health checks, persistent data, runtime secrets, backup, restore, and upgrade procedures are verifiable."
+      ],
+      "security_critical": true
+    },
+    {
+      "id": "REL-001",
+      "title": "Reproducible release",
+      "priority": "high",
+      "acceptance": [
+        "Pull requests and releases use clone-local verification scripts.",
+        "Released images are immutable, scanned, SBOM-equipped, provenance-attested, and rollback-documented."
+      ],
+      "security_critical": true
+    }
+  ]
+}

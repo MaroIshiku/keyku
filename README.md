@@ -144,7 +144,7 @@ Back up the complete persistent data directory before destructive maintenance ac
 Frontend files are static in `public/`; the backend is in `python/app.py`.
 
 ```bash
-docker build -f python/Dockerfile -t keyku:local .
+docker build -t keyku:local .
 docker run --rm -p 3000:3000 \
   -e ISHIKU_SETUP_SECRET=replace-with-a-long-random-setup-secret \
   -v keyku-data:/data \

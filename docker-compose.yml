@@ -38,7 +38,7 @@ services:
       retries: 3
       start_period: 10s
     hostname: keyku
-    image: ghcr.io/maroishiku/keyku:latest
+    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:0.2.1}
     init: true
     labels:
       icon: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/assets/logos/keyku.png

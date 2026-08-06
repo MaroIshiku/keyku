@@ -35,7 +35,7 @@
     "github_owner": "MaroIshiku",
     "public_repository": true,
     "short_description": "Self-hosted Steam key vault in the Pixel Soft Utility design system.",
-    "docker_image": "ghcr.io/maroishiku/keyku:latest",
+    "docker_image": "ghcr.io/maroishiku/keyku:0.2.1",
     "codex_notice_enabled": true
   },
   "default_theme": "lavender",

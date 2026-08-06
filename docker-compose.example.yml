@@ -2,7 +2,7 @@ name: keyku
 
 services:
   keyku:
-    image: ghcr.io/maroishiku/keyku:latest
+    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:0.2.1}
     container_name: keyku
     restart: unless-stopped
     ports:
