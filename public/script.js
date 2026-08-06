@@ -935,7 +935,7 @@ function accountSettingsHtml() {
         <input class="psu-input" name="username" autocomplete="username" minlength="3" maxlength="32" required value="${escapeHtml(state.user?.username || "")}" />
       </label>
       <label class="psu-field">
-        <span class="psu-label">Email optional</span>
+        <span class="psu-label">Email (optional)</span>
         <input class="psu-input" name="email" type="email" autocomplete="email" maxlength="180" value="${escapeHtml(state.user?.email || "")}" />
       </label>
       <label class="psu-field">
@@ -1018,7 +1018,7 @@ function adminSettingsHtml(settings, info, users) {
       <form id="admin-create-user-form" class="keyku-form-grid">
         <input class="psu-input" name="displayName" placeholder="Display name" required />
         <input class="psu-input" name="username" placeholder="Username" required minlength="3" maxlength="32" />
-        <input class="psu-input" name="email" placeholder="Email optional" type="email" />
+        <input class="psu-input" name="email" placeholder="Email (optional)" type="email" />
         <select class="psu-input" name="role"><option value="user">User</option><option value="admin">Admin</option></select>
         <input class="psu-input" name="password" placeholder="Initial password" type="password" required minlength="12" />
         <button class="psu-button psu-button--filled" type="submit">Create account</button>

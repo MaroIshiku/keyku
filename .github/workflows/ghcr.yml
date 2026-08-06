@@ -45,4 +45,5 @@ jobs:
             APP_BUILD_DATE=${{ steps.meta.outputs.build_date }}
             GITHUB_SHA=${{ github.sha }}
           tags: |
+            ghcr.io/maroishiku/keyku:latest
             ghcr.io/maroishiku/keyku:sha-${{ github.sha }}
