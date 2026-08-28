@@ -100,6 +100,13 @@ export function bindHeaderScrollState() {
 }
 
 export function bindSheetTriggers() {
+  const focusableSelector = "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])";
+  const closeSheet = (target) => {
+    target.setAttribute("hidden", "");
+    const returnFocus = target.__psuReturnFocus;
+    if (returnFocus instanceof HTMLElement && returnFocus.isConnected) returnFocus.focus();
+    target.__psuReturnFocus = null;
+  };
   document.addEventListener("click", (event) => {
     const openTrigger = event.target.closest("[data-psu-open]");
     const closeTrigger = event.target.closest("[data-psu-close]");
@@ -108,21 +115,44 @@ export function bindSheetTriggers() {
     if (openTrigger) {
       const target = document.querySelector(openTrigger.dataset.psuOpen);
       if (target) {
+        target.__psuReturnFocus = openTrigger;
         target.hidden = false;
-        target.querySelector("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")?.focus();
+        target.querySelector(focusableSelector)?.focus();
       }
     }
 
     if (closeTrigger) {
-      closeTrigger.closest(".psu-backdrop")?.setAttribute("hidden", "");
+      const target = closeTrigger.closest(".psu-backdrop");
+      if (target) closeSheet(target);
     }
 
-    if (backdrop) backdrop.setAttribute("hidden", "");
+    if (backdrop) closeSheet(backdrop);
   });
 
   document.addEventListener("keydown", (event) => {
+    const openSheets = Array.from(document.querySelectorAll(".psu-backdrop:not([hidden])"));
+    const activeSheet = openSheets.at(-1);
+    if (!activeSheet) return;
     if (event.key === "Escape") {
-      document.querySelectorAll(".psu-backdrop:not([hidden])").forEach((element) => element.setAttribute("hidden", ""));
+      event.preventDefault();
+      closeSheet(activeSheet);
+      return;
+    }
+    if (event.key === "Tab") {
+      const focusable = Array.from(activeSheet.querySelectorAll(focusableSelector)).filter((element) => !element.hidden && element.getClientRects().length > 0);
+      if (!focusable.length) {
+        event.preventDefault();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
   });
 

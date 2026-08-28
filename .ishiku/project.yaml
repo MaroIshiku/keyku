@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "kit_version": "1.1.1",
+  "kit_version": "1.2.1",
   "application": {
     "id": "keyku",
     "name": "Keyku",
@@ -37,7 +37,7 @@
       },
       {
         "name": "application",
-        "command": "python -m compileall -q python",
+        "command": "python3 tests/run.py",
         "required_for_verified": true
       },
       {
@@ -52,5 +52,10 @@
       }
     ]
   },
-  "upstreams": []
+  "upstreams": [
+    {"id": "python-runtime", "source": "docker.io/library/python:3.14-alpine", "strategy": "container"},
+    {"id": "flask", "source": "https://pypi.org/project/Flask/", "strategy": "dependency"},
+    {"id": "gunicorn", "source": "https://pypi.org/project/gunicorn/", "strategy": "dependency"},
+    {"id": "argon2-cffi", "source": "https://pypi.org/project/argon2-cffi/", "strategy": "dependency"}
+  ]
 }

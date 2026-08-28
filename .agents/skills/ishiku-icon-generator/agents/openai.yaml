@@ -1,0 +1,4 @@
+interface:
+  display_name: "ishiku Icon Generator"
+  short_description: "Create RGBA icons and web-ready exports"
+  default_prompt: "Use $ishiku-icon-generator to create one consistent RGBA source, directly export all required sizes, validate them, and prepare webapp import assets when requested."

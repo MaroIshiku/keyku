@@ -23,3 +23,13 @@ source-assets
 *.db
 *.bak
 .ishiku/reports
+.agents
+.github
+.ishiku
+assets
+tests
+README.md
+docker-compose*.yml
+appspec.yaml
+app.manifest.json
+AGENTS.md

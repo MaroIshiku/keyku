@@ -234,7 +234,8 @@
   font-size: var(--type-label-large-size);
   font-weight: 750;
 }
-.psu-segmented-control button[aria-selected="true"] { background: var(--color-surface-raised); color: var(--color-on-surface); box-shadow: var(--shadow-soft); }
+.psu-segmented-control button[aria-selected="true"],
+.psu-segmented-control button[aria-pressed="true"] { background: var(--color-surface-raised); color: var(--color-on-surface); box-shadow: var(--shadow-soft); }
 
 /* Sheets and dialogs */
 .psu-backdrop {

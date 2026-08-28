@@ -18,6 +18,7 @@ services:
     environment:
       - ISHIKU_APP_URL=
       - ISHIKU_BASE_PATH=/
+      - ISHIKU_COOKIE_SECURE=auto
       - ISHIKU_DATA_DIR=/data
       - ISHIKU_LOG_LEVEL=info
       - ISHIKU_SETUP_SECRET=
@@ -38,10 +39,10 @@ services:
       retries: 3
       start_period: 10s
     hostname: keyku
-    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:0.2.1}
+    image: ghcr.io/maroishiku/keyku:v0.3.0
     init: true
     labels:
-      icon: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/assets/logos/keyku.png
+      icon: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/icons/icon-512.png
       org.opencontainers.image.description: Self-hosted Steam key vault with first-run admin setup and public share links.
       org.opencontainers.image.source: https://github.com/MaroIshiku/keyku
       org.opencontainers.image.title: Keyku - Key Vault
@@ -55,7 +56,7 @@ services:
     pids_limit: 128
     ports:
       - target: 3000
-        published: "8186"
+        published: "65005"
         protocol: tcp
     pull_policy: always
     read_only: true
@@ -89,17 +90,17 @@ x-casaos:
     en_us: Self-hosted Steam key vault with admin setup, protected accounts and public share links.
   developer: MaroIshiku
   hostname: ""
-  icon: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/assets/logos/keyku.png
+  icon: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/icons/icon-512.png
   index: /
   is_uncontrolled: false
   main: keyku
-  port_map: "8186"
+  port_map: "65005"
   scheme: http
   store_app_id: keyku
   tagline:
     de_de: Privater Steam-Key-Tresor fuer Familie und Freunde.
     en_us: Private Steam key vault for family and friends.
-  thumbnail: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/assets/logos/keyku.png
+  thumbnail: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/icons/icon-512.png
   tips:
     before_install:
       de_de: >

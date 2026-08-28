@@ -6,19 +6,21 @@ import json
 import os
 import secrets
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import RLock
 from urllib.parse import quote
 
-from flask import Flask, jsonify, make_response, request, send_from_directory
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
+from flask import Flask, g, jsonify, make_response, request, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 APP_ID = "keyku"
 APP_NAME = "Keyku - Key Vault"
 APP_SUBTITLE = "Secure Steam key sharing"
-APP_VERSION = os.environ.get("APP_VERSION", "0.2.1")
+APP_VERSION = os.environ.get("APP_VERSION", "0.3.0")
 APP_BUILD_DATE = os.environ.get("APP_BUILD_DATE", "local")
 APP_GIT_SHA = os.environ.get("GITHUB_SHA", os.environ.get("APP_GIT_SHA", "local"))
 PORT = int(os.environ.get("PORT", "3000"))
@@ -28,6 +30,8 @@ DATA_DIR = CSV_PATH.parent if "CSV_PATH" in os.environ else DATA_DIR
 USERS_PATH = Path(os.environ.get("USERS_PATH", str(DATA_DIR / "users.json")))
 REQUESTS_PATH = Path(os.environ.get("REACTIVATION_REQUESTS_PATH", str(DATA_DIR / "reactivation-requests.json")))
 PASSWORD_RESET_REQUESTS_PATH = Path(os.environ.get("PASSWORD_RESET_REQUESTS_PATH", str(DATA_DIR / "password-reset-requests.json")))
+SESSIONS_PATH = Path(os.environ.get("SESSIONS_PATH", str(DATA_DIR / "sessions.json")))
+AUDIT_PATH = Path(os.environ.get("AUDIT_PATH", str(DATA_DIR / "audit.jsonl")))
 SECRET_PATH = Path(os.environ.get("SESSION_SECRET_FILE", str(DATA_DIR / "session-secret.txt")))
 PUBLIC_DIR = Path(os.environ.get("PUBLIC_DIR", str(Path(__file__).resolve().parent.parent / "public")))
 SETUP_STATE_PATH = Path(os.environ.get("SETUP_STATE_PATH", str(DATA_DIR / "setup-state.json")))
@@ -37,18 +41,35 @@ SETUP_SECRET_FILE_DEFAULT = "/run/secrets/ishiku_setup_secret"
 PLACEHOLDER_PASSWORDS = {"admin", "password", "passwort", "changeme", "change-me", "123456", "123456789", "ishiku"}
 
 SESSION_COOKIE = "keyku_session"
-SESSION_TTL_SECONDS = 14 * 24 * 60 * 60
-SESSION_TTL_MS = SESSION_TTL_SECONDS * 1000
+SESSION_IDLE_SECONDS = int(os.environ.get("ISHIKU_SESSION_IDLE_SECONDS", str(12 * 60 * 60)))
+SESSION_ABSOLUTE_SECONDS = int(os.environ.get("ISHIKU_SESSION_ABSOLUTE_SECONDS", str(14 * 24 * 60 * 60)))
+LOGIN_WINDOW_SECONDS = 15 * 60
+LOGIN_ACCOUNT_LIMIT = 8
+LOGIN_NETWORK_LIMIT = 24
+ARGON2 = PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1, hash_len=32, salt_len=16)
 
 app = Flask(__name__, static_folder=None)
+app.config["MAX_CONTENT_LENGTH"] = 64 * 1024
 if str(os.environ.get("ISHIKU_TRUST_PROXY", "")).lower() in {"1", "true", "yes", "on"}:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 file_lock = RLock()
 setup_attempts = {}
+login_attempts = {"account": {}, "network": {}}
 
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def iso_at(value):
+    return value.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def parse_iso(value):
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).astimezone(timezone.utc)
+    except (TypeError, ValueError):
+        return datetime.fromtimestamp(0, timezone.utc)
 
 
 def ensure_dir(path):
@@ -103,14 +124,6 @@ def b64url(data):
     return base64.urlsafe_b64encode(data).decode("ascii").rstrip("=")
 
 
-def b64url_json(value):
-    return b64url(json.dumps(value, separators=(",", ":")).encode("utf-8"))
-
-
-def sign_payload(payload):
-    return b64url(hmac.new(SESSION_SECRET.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).digest())
-
-
 def safe_equal(left, right):
     return hmac.compare_digest(str(left), str(right))
 
@@ -151,18 +164,35 @@ def validate_username(username):
     return validate_credentials(username, "temporary-valid-password", min_password_length=12)
 
 
-def hash_password(password, salt=None, iterations=310000):
-    clean_salt = salt or secrets.token_urlsafe(16)
-    digest = hashlib.pbkdf2_hmac("sha256", str(password).encode("utf-8"), clean_salt.encode("utf-8"), int(iterations), dklen=32)
-    return {"salt": clean_salt, "iterations": int(iterations), "hash": b64url(digest)}
+def hash_password(password):
+    return {"algorithm": "argon2id", "hash": ARGON2.hash(str(password))}
 
 
 def verify_password(password, user):
     if not user:
         return False
     expected = user.get("passwordHash", "")
-    actual = hash_password(password, user.get("salt", ""), user.get("iterations", 310000))["hash"]
-    return safe_equal(actual, expected)
+    if user.get("passwordAlgorithm") == "argon2id" or str(expected).startswith("$argon2id$"):
+        try:
+            return ARGON2.verify(expected, str(password))
+        except (VerifyMismatchError, VerificationError, InvalidHashError):
+            return False
+    salt = str(user.get("salt") or "")
+    iterations = int(user.get("iterations") or 310000)
+    if not salt or not expected:
+        return False
+    digest = hashlib.pbkdf2_hmac("sha256", str(password).encode("utf-8"), salt.encode("utf-8"), iterations, dklen=32)
+    return safe_equal(b64url(digest), expected)
+
+
+def password_needs_upgrade(user):
+    encoded = str(user.get("passwordHash") or "")
+    if user.get("passwordAlgorithm") != "argon2id" or not encoded.startswith("$argon2id$"):
+        return True
+    try:
+        return ARGON2.check_needs_rehash(encoded)
+    except InvalidHashError:
+        return True
 
 
 def read_users():
@@ -172,6 +202,31 @@ def read_users():
 
 def write_users(data):
     write_json(USERS_PATH, data)
+
+
+def read_sessions():
+    data = read_json(SESSIONS_PATH, {"sessions": []})
+    return data if isinstance(data.get("sessions"), list) else {"sessions": []}
+
+
+def write_sessions(data):
+    write_json(SESSIONS_PATH, data)
+
+
+def audit_event(event, *, actor=None, target=None, result="success"):
+    entry = {
+        "time": now_iso(),
+        "requestId": getattr(g, "request_id", None),
+        "event": event,
+        "actor": actor,
+        "target": target,
+        "result": result,
+    }
+    ensure_dir(AUDIT_PATH.parent)
+    with file_lock:
+        with AUDIT_PATH.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, separators=(",", ":"), ensure_ascii=False) + "\n")
+        AUDIT_PATH.chmod(0o600)
 
 
 def read_reactivation_requests():
@@ -267,6 +322,37 @@ def record_failed_setup_attempt(remote_addr):
     setup_attempts.setdefault(key, []).append(datetime.now().timestamp())
 
 
+def login_signal(scope, username=""):
+    remote = request.remote_addr or "unknown"
+    if scope == "account":
+        value = normalize_username(username) or "unknown"
+    else:
+        value = remote
+    return hmac.new(SESSION_SECRET.encode("utf-8"), f"login:{scope}:{value}".encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def login_rate_limited(username):
+    now = datetime.now().timestamp()
+    signals = (("account", login_signal("account", username), LOGIN_ACCOUNT_LIMIT), ("network", login_signal("network"), LOGIN_NETWORK_LIMIT))
+    limited = False
+    for scope, key, limit in signals:
+        recent = [stamp for stamp in login_attempts[scope].get(key, []) if now - stamp < LOGIN_WINDOW_SECONDS]
+        login_attempts[scope][key] = recent
+        limited = limited or len(recent) >= limit
+    return limited
+
+
+def record_login_attempt(username, success):
+    account_key = login_signal("account", username)
+    network_key = login_signal("network")
+    if success:
+        login_attempts["account"].pop(account_key, None)
+        return
+    stamp = datetime.now().timestamp()
+    login_attempts["account"].setdefault(account_key, []).append(stamp)
+    login_attempts["network"].setdefault(network_key, []).append(stamp)
+
+
 def validate_setup_admin(data, configured_secret):
     username = normalize_username(data.get("adminUsername") or data.get("username"))
     display_name = str(data.get("displayName") or data.get("adminDisplayName") or "").strip()
@@ -297,46 +383,144 @@ def validate_setup_admin(data, configured_secret):
 
 
 def cookie_secure():
-    return request.is_secure or request.headers.get("X-Forwarded-Proto", "").split(",")[0].strip() == "https"
+    configured = str(os.environ.get("ISHIKU_COOKIE_SECURE", "auto")).strip().lower()
+    if configured in {"1", "true", "yes", "on"}:
+        return True
+    if configured in {"0", "false", "no", "off"}:
+        return False
+    public_url = str(os.environ.get("ISHIKU_APP_URL") or "").strip().lower()
+    return public_url.startswith("https://") or request.is_secure
+
+
+def session_token_hash(token):
+    return hmac_token("session:v1", token)
+
+
+def csrf_token_hash(token):
+    return hmac_token("csrf:v1", token)
+
+
+def prune_sessions(data):
+    current = datetime.now(timezone.utc)
+    sessions = []
+    for session in data.get("sessions", []):
+        if parse_iso(session.get("idleExpiresAt")) <= current:
+            continue
+        if parse_iso(session.get("absoluteExpiresAt")) <= current:
+            continue
+        sessions.append(session)
+    changed = len(sessions) != len(data.get("sessions", []))
+    data["sessions"] = sessions
+    return changed
+
+
+def create_session(user):
+    token = secrets.token_urlsafe(48)
+    csrf_token = secrets.token_urlsafe(32)
+    created = datetime.now(timezone.utc)
+    session = {
+        "id": secrets.token_urlsafe(18),
+        "tokenHash": session_token_hash(token),
+        "csrfHash": csrf_token_hash(csrf_token),
+        "csrfToken": csrf_token,
+        "userId": user["id"],
+        "createdAt": iso_at(created),
+        "lastSeenAt": iso_at(created),
+        "idleExpiresAt": iso_at(created + timedelta(seconds=SESSION_IDLE_SECONDS)),
+        "absoluteExpiresAt": iso_at(created + timedelta(seconds=SESSION_ABSOLUTE_SECONDS)),
+        "userAgent": str(request.headers.get("User-Agent") or "Unknown device")[:180],
+    }
+    with file_lock:
+        data = read_sessions()
+        prune_sessions(data)
+        data["sessions"].append(session)
+        write_sessions(data)
+    return token, csrf_token, session
+
+
+def session_context(update_activity=True):
+    if hasattr(g, "keyku_session_context"):
+        return g.keyku_session_context
+    token = request.cookies.get(SESSION_COOKIE)
+    if not token:
+        g.keyku_session_context = (None, None)
+        return g.keyku_session_context
+    token_hash = session_token_hash(token)
+    with file_lock:
+        data = read_sessions()
+        changed = prune_sessions(data)
+        session = next((item for item in data["sessions"] if safe_equal(item.get("tokenHash", ""), token_hash)), None)
+        if session:
+            user = next((candidate for candidate in read_users()["users"] if candidate.get("id") == session.get("userId")), None)
+            if not user or user.get("status") != "approved":
+                data["sessions"] = [item for item in data["sessions"] if item.get("id") != session.get("id")]
+                session = None
+                changed = True
+            elif update_activity:
+                current = datetime.now(timezone.utc)
+                last_seen = parse_iso(session.get("lastSeenAt"))
+                if current - last_seen >= timedelta(minutes=1):
+                    session["lastSeenAt"] = iso_at(current)
+                    session["idleExpiresAt"] = iso_at(current + timedelta(seconds=SESSION_IDLE_SECONDS))
+                    changed = True
+        else:
+            user = None
+        if changed:
+            write_sessions(data)
+    g.keyku_session_context = (user if session else None, session)
+    return g.keyku_session_context
+
+
+def revoke_sessions(user_id, *, keep_session_id=None):
+    with file_lock:
+        data = read_sessions()
+        before = len(data["sessions"])
+        data["sessions"] = [
+            item for item in data["sessions"]
+            if item.get("userId") != user_id or item.get("id") == keep_session_id
+        ]
+        removed = before - len(data["sessions"])
+        if removed:
+            write_sessions(data)
+    return removed
+
+
+def revoke_session(session_id, user_id=None):
+    with file_lock:
+        data = read_sessions()
+        before = len(data["sessions"])
+        data["sessions"] = [
+            item for item in data["sessions"]
+            if item.get("id") != session_id or (user_id is not None and item.get("userId") != user_id)
+        ]
+        removed = before - len(data["sessions"])
+        if removed:
+            write_sessions(data)
+    return removed
 
 
 def set_session_cookie(response, user):
-    payload = b64url_json({"uid": user["id"], "exp": int(datetime.now().timestamp() * 1000) + SESSION_TTL_MS})
-    token = f"{payload}.{sign_payload(payload)}"
+    token, csrf_token, _session = create_session(user)
     response.set_cookie(
         SESSION_COOKIE,
         token,
-        max_age=SESSION_TTL_SECONDS,
+        max_age=SESSION_ABSOLUTE_SECONDS,
         httponly=True,
         secure=cookie_secure(),
         samesite="Lax",
         path="/",
     )
+    response.headers["X-CSRF-Token"] = csrf_token
     return response
 
 
 def clear_session_cookie(response):
-    response.set_cookie(SESSION_COOKIE, "", max_age=0, httponly=True, samesite="Lax", path="/")
+    response.set_cookie(SESSION_COOKIE, "", max_age=0, httponly=True, secure=cookie_secure(), samesite="Lax", path="/")
     return response
 
 
 def current_user():
-    token = request.cookies.get(SESSION_COOKIE)
-    if not token or "." not in token:
-        return None
-    payload, signature = token.rsplit(".", 1)
-    if not safe_equal(sign_payload(payload), signature):
-        return None
-    try:
-        padded = payload + "=" * (-len(payload) % 4)
-        parsed = json.loads(base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8"))
-    except Exception:
-        return None
-    if not parsed.get("uid") or int(parsed.get("exp", 0)) < int(datetime.now().timestamp() * 1000):
-        return None
-    user = next((candidate for candidate in read_users()["users"] if candidate.get("id") == parsed["uid"]), None)
-    if not user or user.get("status") != "approved":
-        return None
+    user, _session = session_context()
     return user
 
 
@@ -519,7 +703,44 @@ def find_key_by_request(keys, req):
 
 
 def json_body():
-    return request.get_json(silent=True) or {}
+    body = request.get_json(silent=True)
+    return body if isinstance(body, dict) else {}
+
+
+PUBLIC_MUTATION_PATHS = {
+    "/api/setup/register-admin",
+    "/api/auth/register",
+    "/api/auth/login",
+    "/api/auth/password-reset-request",
+}
+
+
+@app.before_request
+def request_security():
+    g.request_id = secrets.token_hex(12)
+    if request.method in {"GET", "HEAD", "OPTIONS"} or not request.path.startswith("/api/"):
+        return None
+    fetch_site = str(request.headers.get("Sec-Fetch-Site") or "").lower()
+    if fetch_site == "cross-site":
+        return jsonify({"error": "Cross-site request rejected."}), 403
+    origin = request.headers.get("Origin")
+    if origin and origin != request.host_url.rstrip("/"):
+        return jsonify({"error": "Request origin rejected."}), 403
+    if request.path in PUBLIC_MUTATION_PATHS:
+        return None
+    user, session = session_context(update_activity=False)
+    if not user or not session:
+        return None
+    supplied = str(request.headers.get("X-CSRF-Token") or "")
+    if not supplied or not safe_equal(csrf_token_hash(supplied), session.get("csrfHash", "")):
+        audit_event("csrf.validation", actor=user.get("id"), result="denied")
+        return jsonify({"error": "Request verification failed. Refresh the page and try again."}), 403
+    return None
+
+
+@app.errorhandler(413)
+def request_too_large(_error):
+    return jsonify({"error": "Request body is too large."}), 413
 
 
 @app.after_request
@@ -529,6 +750,11 @@ def security_headers(response):
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+    response.headers["X-Request-ID"] = getattr(g, "request_id", "")
+    if request.is_secure:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     if request.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store"
     return response
@@ -608,8 +834,7 @@ def api_setup_register_admin():
             "displayName": str(body.get("displayName") or body.get("adminDisplayName") or username).strip(),
             "email": str(body.get("email") or "").strip(),
             "passwordHash": hashed["hash"],
-            "salt": hashed["salt"],
-            "iterations": hashed["iterations"],
+            "passwordAlgorithm": hashed["algorithm"],
             "role": "admin",
             "status": "approved",
             "createdAt": created,
@@ -620,6 +845,7 @@ def api_setup_register_admin():
         write_users(data)
         write_setup_state({"setupCompleted": True, "completedAt": created})
 
+    audit_event("setup.admin_created", actor=user["id"], target=user["id"])
     response = make_response(jsonify({"ok": True, "user": public_user(user), "setupCompleted": True}), 201)
     return set_session_cookie(response, user)
 
@@ -629,7 +855,7 @@ def auth_me():
     setup_state = setup_status_payload()
     if setup_state.get("setupRequired"):
         return jsonify({"authenticated": False, **setup_state})
-    user = current_user()
+    user, session = session_context()
     if not user:
         return jsonify({"authenticated": False, **setup_state})
     users = read_users()["users"]
@@ -637,7 +863,9 @@ def auth_me():
     pending_reactivations = sum(1 for req in read_reactivation_requests()["requests"] if req.get("status") == "pending")
     pending_resets = sum(1 for req in read_password_reset_requests()["requests"] if req.get("status") == "pending")
     count = pending_users + pending_reactivations + pending_resets if user.get("role") == "admin" else 0
-    return jsonify({"authenticated": True, "user": public_user(user), "pendingCount": pending_users if user.get("role") == "admin" else 0, "notificationCount": count})
+    response = make_response(jsonify({"authenticated": True, "user": public_user(user), "pendingCount": pending_users if user.get("role") == "admin" else 0, "notificationCount": count}))
+    response.headers["X-CSRF-Token"] = session.get("csrfToken", "")
+    return response
 
 
 @app.post("/api/auth/register")
@@ -669,8 +897,7 @@ def auth_register():
             "displayName": display_name,
             "email": email,
             "passwordHash": hashed["hash"],
-            "salt": hashed["salt"],
-            "iterations": hashed["iterations"],
+            "passwordAlgorithm": hashed["algorithm"],
             "role": "user",
             "status": "pending",
             "createdAt": now_iso(),
@@ -685,13 +912,28 @@ def auth_login():
     body = json_body()
     username = normalize_username(body.get("username"))
     password = str(body.get("password") or "")
+    if login_rate_limited(username):
+        audit_event("auth.sign_in", target=username or None, result="rate_limited")
+        return jsonify({"error": "Sign-in temporarily unavailable. Try again later."}), 429
     user = next((candidate for candidate in read_users()["users"] if candidate.get("username") == username), None)
-    if not user or not verify_password(password, user):
+    valid = bool(user and verify_password(password, user) and user.get("status") == "approved")
+    record_login_attempt(username, valid)
+    if not valid:
+        audit_event("auth.sign_in", target=username or None, result="denied")
         return jsonify({"error": "Username or password is incorrect."}), 401
-    if user.get("status") == "pending":
-        return jsonify({"error": "Your account is waiting for admin approval."}), 403
-    if user.get("status") != "approved":
-        return jsonify({"error": "This account is not active."}), 403
+    if password_needs_upgrade(user):
+        with file_lock:
+            data = read_users()
+            stored = next((candidate for candidate in data["users"] if candidate.get("id") == user.get("id")), None)
+            if stored and verify_password(password, stored):
+                set_user_password(stored, password, stored["id"])
+                write_users(data)
+                user = stored
+                audit_event("auth.password_hash_upgraded", actor=user["id"], target=user["id"])
+    _previous_user, previous_session = session_context(update_activity=False)
+    if previous_session:
+        revoke_session(previous_session.get("id"), user["id"])
+    audit_event("auth.sign_in", actor=user["id"], target=user["id"])
     response = make_response(jsonify({"ok": True, "user": public_user(user)}))
     return set_session_cookie(response, user)
 
@@ -712,8 +954,57 @@ def password_reset_request():
 
 @app.post("/api/auth/logout")
 def auth_logout():
+    user, session = session_context(update_activity=False)
+    if user and session:
+        revoke_session(session.get("id"), user["id"])
+        audit_event("auth.sign_out", actor=user["id"], target=session.get("id"))
     response = make_response(jsonify({"ok": True}))
     return clear_session_cookie(response)
+
+
+@app.get("/api/auth/sessions")
+def auth_sessions():
+    user, error = require_auth()
+    if error:
+        return error
+    _active_user, active = session_context()
+    with file_lock:
+        data = read_sessions()
+        changed = prune_sessions(data)
+        sessions = [item for item in data["sessions"] if item.get("userId") == user.get("id")]
+        if changed:
+            write_sessions(data)
+    return jsonify({
+        "sessions": [
+            {
+                "id": item.get("id"),
+                "createdAt": item.get("createdAt"),
+                "lastSeenAt": item.get("lastSeenAt"),
+                "absoluteExpiresAt": item.get("absoluteExpiresAt"),
+                "userAgent": item.get("userAgent"),
+                "current": item.get("id") == active.get("id"),
+            }
+            for item in sorted(sessions, key=lambda value: str(value.get("lastSeenAt")), reverse=True)
+        ]
+    })
+
+
+@app.delete("/api/auth/sessions/<session_id>")
+def auth_session_revoke(session_id):
+    user, error = require_auth()
+    if error:
+        return error
+    _active_user, active = session_context(update_activity=False)
+    with file_lock:
+        data = read_sessions()
+        target = next((item for item in data["sessions"] if item.get("id") == session_id and item.get("userId") == user.get("id")), None)
+        if not target:
+            return jsonify({"error": "Session not found"}), 404
+        data["sessions"] = [item for item in data["sessions"] if item.get("id") != session_id]
+        write_sessions(data)
+    audit_event("auth.session_revoked", actor=user["id"], target=session_id)
+    response = make_response(jsonify({"ok": True, "current": session_id == active.get("id")}))
+    return clear_session_cookie(response) if session_id == active.get("id") else response
 
 
 @app.patch("/api/account")
@@ -761,6 +1052,11 @@ def account_update():
         if new_password:
             set_user_password(user, new_password, user["id"])
         write_users(data)
+    if new_password:
+        revoke_sessions(user["id"])
+        audit_event("auth.password_changed", actor=user["id"], target=user["id"])
+        response = make_response(jsonify({"ok": True, "user": public_user(user), "sessionRotated": True}))
+        return set_session_cookie(response, user)
     return jsonify({"ok": True, "user": public_user(user)})
 
 
@@ -907,6 +1203,7 @@ def admin_user_approve(user_id):
         user["approvedAt"] = now_iso()
         user["approvedBy"] = admin["id"]
         write_users(data)
+    audit_event("admin.user_approved", actor=admin["id"], target=user["id"])
     return jsonify({"ok": True, "user": public_user(user)})
 
 
@@ -926,6 +1223,8 @@ def admin_user_reject(user_id):
         user["rejectedAt"] = now_iso()
         user["rejectedBy"] = admin["id"]
         write_users(data)
+    revoke_sessions(user["id"])
+    audit_event("admin.user_rejected", actor=admin["id"], target=user["id"])
     return jsonify({"ok": True, "user": public_user(user)})
 
 
@@ -970,8 +1269,7 @@ def admin_user_create():
             "displayName": display_name,
             "email": email,
             "passwordHash": hashed["hash"],
-            "salt": hashed["salt"],
-            "iterations": hashed["iterations"],
+            "passwordAlgorithm": hashed["algorithm"],
             "role": role,
             "status": "approved",
             "createdAt": created,
@@ -980,14 +1278,16 @@ def admin_user_create():
         }
         data["users"].append(user)
         write_users(data)
+    audit_event("admin.user_created", actor=admin["id"], target=user["id"])
     return jsonify({"ok": True, "user": public_user(user)}), 201
 
 
 def set_user_password(user, password, admin_id):
     hashed = hash_password(password)
     user["passwordHash"] = hashed["hash"]
-    user["salt"] = hashed["salt"]
-    user["iterations"] = hashed["iterations"]
+    user["passwordAlgorithm"] = hashed["algorithm"]
+    user.pop("salt", None)
+    user.pop("iterations", None)
     user["passwordChangedAt"] = now_iso()
     user["passwordChangedBy"] = admin_id
 
@@ -998,7 +1298,7 @@ def admin_password_reset_complete(request_id):
     if error:
         return error
     body = json_body()
-    error_text = validate_password(body.get("password"))
+    error_text = validate_password(body.get("password"), min_length=12)
     if error_text:
         return jsonify({"error": error_text}), 400
     with file_lock:
@@ -1018,6 +1318,8 @@ def admin_password_reset_complete(request_id):
         reset_request["resolvedBy"] = admin["id"]
         write_users(user_data)
         write_password_reset_requests(reset_data)
+    revoke_sessions(user["id"])
+    audit_event("admin.password_reset_completed", actor=admin["id"], target=user["id"])
     return jsonify({"ok": True, "request": public_password_reset_request(reset_request), "user": public_user(user)})
 
 
@@ -1309,6 +1611,8 @@ def init_storage():
             write_reactivation_requests({"requests": []})
         if not PASSWORD_RESET_REQUESTS_PATH.exists():
             write_password_reset_requests({"requests": []})
+        if not SESSIONS_PATH.exists():
+            write_sessions({"sessions": []})
         if not SETUP_STATE_PATH.exists():
             write_setup_state({"setupCompleted": admin_exists(read_users()["users"]), "createdAt": now_iso()})
 

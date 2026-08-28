@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1.7
 
-FROM python:3.12-alpine@sha256:6d43704baacd1bfbe7c295d7f13079d5d8104ed33568873133f8fc69980419df
+FROM python:3.14-alpine@sha256:05b2b8b732ecd268fee8727a369f936f022d1321b59befd13c30ede22769dcdc
 
-ARG APP_VERSION=0.2.1
+ARG APP_VERSION=0.3.0
 ARG APP_BUILD_DATE=local
 ARG GITHUB_SHA=local
 
@@ -18,7 +18,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY python/requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt \
+RUN apk add --no-cache --upgrade \
+        libcrypto3=3.5.8-r0 \
+        libssl3=3.5.8-r0 \
+    && python -m pip install --no-cache-dir -r /app/requirements.txt \
+    && python -m pip uninstall --yes pip \
+    && python -c "import ensurepip, pathlib, shutil; shutil.rmtree(pathlib.Path(ensurepip.__file__).parent)" \
     && addgroup -S -g 10001 keyku \
     && adduser -S -D -H -u 10001 -G keyku keyku \
     && install -d -o keyku -g keyku -m 0750 /data
@@ -33,4 +38,4 @@ STOPSIGNAL SIGTERM
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3000/readyz', timeout=3).read()"
 
-CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "1", "--threads", "8", "--access-logfile", "-", "--error-logfile", "-", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "1", "--threads", "8", "--worker-tmp-dir", "/tmp", "--no-control-socket", "--access-logfile", "-", "--error-logfile", "-", "app:app"]

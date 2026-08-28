@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "primary_platform": "ZimaOS",
+  "image": {
+    "registry": "ghcr.io",
+    "owner": "maroishiku",
+    "release_reference": "immutable_tag_and_digest",
+    "floating_tag_allowed": false,
+    "primary_compose_uses_direct_image": true
+  },
+  "ui_compatibility": {
+    "icon_required": true,
+    "icon_url_scheme": "https",
+    "maximum_interpolation_variables_in_primary_compose": 0,
+    "prefer_direct_scalar_values": true,
+    "external_env_is_alternative_only": true
+  },
+  "storage": {
+    "new_app_host_path_pattern": "/DATA/AppData/i_<app-id>/Data",
+    "existing_app_path_policy": "preserve_recorded_path_without_an_approved_migration",
+    "container_data_path": "/data",
+    "migration_policy": "breaking-change-allowed",
+    "requires_backup_before_update": true
+  },
+  "setup_secret": {
+    "preferred_environment_name": "ISHIKU_SETUP_SECRET",
+    "minimum_characters": 32,
+    "compose_cleartext_supported": true,
+    "primary_compose_uses_cleartext_placeholder": true,
+    "alternative_dot_env_supported": true,
+    "must_not_ship_a_real_or_reusable_secret": true
+  },
+  "host_ports": {
+    "canonical_registry": "ports.yaml",
+    "registry_location": "workspace_root",
+    "range": "65000-65099",
+    "published_port_source": "explicit port_registry.ports entry matching application_id",
+    "container_port_source": "application compatibility contract",
+    "standalone_snapshot_required": true,
+    "runtime_workspace_dependency_forbidden": true
+  }
+}

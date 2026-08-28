@@ -4,7 +4,7 @@
   "title": "ishiku design system contract",
   "type": "object",
   "additionalProperties": false,
-  "required": ["$schema", "schema_version", "id", "version", "status", "language", "name", "purpose", "authority", "identity", "variation", "profiles", "tokens", "components", "composition", "responsive", "content", "icons", "accessibility", "verification", "distribution"],
+  "required": ["$schema", "schema_version", "id", "version", "status", "language", "name", "purpose", "authority", "identity", "variation", "profiles", "tokens", "components", "composition", "responsive", "content", "icons", "app_icons", "accessibility", "verification", "distribution"],
   "properties": {
     "$schema": {"const": "../schemas/design-system.schema.json"},
     "schema_version": {"const": 1},
@@ -50,6 +50,23 @@
     "responsive": {"type": "object", "required": ["strategy", "compact", "medium", "expanded", "wide", "requirements"]},
     "content": {"type": "object", "required": ["interface_locale", "style", "standard_labels", "forbidden"], "properties": {"interface_locale": {"const": "en"}}},
     "icons": {"type": "object", "required": ["source", "default_px", "small_px", "large_px", "rules"]},
+    "app_icons": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["purpose", "family_identity", "geometry", "surfaces", "recognition_palettes", "outputs", "generation", "webapp_import", "validation", "concept_examples"],
+      "properties": {
+        "purpose": {"type": "string", "minLength": 20},
+        "family_identity": {"type": "object", "required": ["style", "rules", "theme_independence"]},
+        "geometry": {"type": "object", "required": ["canvas_ratio", "source_min_px", "source_native_resolution", "export_px", "tile", "corner_radius_ratio", "composition", "primary_symbol_ratio", "primary_symbol_max_ratio", "badge_ratio", "badge_max_ratio", "internal_padding_min_ratio", "internal_padding_preferred_ratio", "transparent_safety_margin_max_ratio_per_side", "transparent_safety_margin_alpha_threshold", "visible_tile_bounds"]},
+        "surfaces": {"type": "object", "required": ["outside_tile", "tile_background", "tile_border", "outer_drop_shadow", "internal_depth", "transparent_corners"]},
+        "recognition_palettes": {"type": "object", "required": ["lavender", "mint", "sky", "amber", "graphite"]},
+        "outputs": {"type": "object", "required": ["repository_default_directory", "required_raster", "derived_png_pattern", "web_aliases", "optional", "generation_notes", "svg", "png"]},
+        "generation": {"type": "object", "required": ["minimum_inputs", "optional_inputs", "symbol_process", "preferred_pipeline", "image_generation_policy", "forbidden_fixes"]},
+        "webapp_import": {"type": "object", "required": ["standard_manifest_icons", "head_links", "maskable", "integration"]},
+        "validation": {"type": "object", "required": ["standard_png", "maskable_png", "svg", "visual"]},
+        "concept_examples": {"type": "object", "minProperties": 1}
+      }
+    },
     "accessibility": {"type": "object", "required": ["target", "requirements", "contrast", "motion"], "properties": {"target": {"const": "WCAG 2.2 AA"}}},
     "verification": {"type": "object", "required": ["viewports", "modes", "themes", "states", "navigation", "automated", "manual", "baseline_rule"]},
     "distribution": {"type": "object", "required": ["canonical_location", "full_contract_copies_in_apps", "app_repository_contains", "workspace_binding_command", "section_query_command", "standalone_binding_command", "standalone_verification_command", "legacy_pack_names", "rule"], "properties": {"full_contract_copies_in_apps": {"const": false}}}

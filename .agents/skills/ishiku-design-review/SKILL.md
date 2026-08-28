@@ -11,7 +11,7 @@ At workspace scope, read the human entrypoint at `Root/.ishiku/policies/design-s
 
 ## Workflow
 
-1. Inventory pages, components, states, breakpoints, tokens, themes, and deviations.
+1. Inventory pages, components, states, breakpoints, tokens, themes, app-icon assets, and deviations. Invoke `$ishiku-icon-generator` for a missing app icon; replace an existing icon only when the task authorizes asset changes.
 2. Ensure all visible text is English and the standard header/profile/Settings/Theme/About structure is used.
 3. Replace unjustified hard-coded colors, spacing, radii, shadows, motion, and duplicate primitives with semantic family tokens/components.
 4. Test semantic HTML, labels, keyboard order, focus, dialogs, announcements, contrast, target size, reduced motion, zoom, long strings, clipping, and horizontal overflow.

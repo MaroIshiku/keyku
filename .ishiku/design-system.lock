@@ -2,8 +2,8 @@
   "schema_version": 1,
   "contract": {
     "id": "ishiku-design-5",
-    "version": "5.0.0",
-    "sha256": "46628d1b69e5c27c3a339a31afbb7c3bed8d148b2fb0916c975407d86e9a1516"
+    "version": "5.1.1",
+    "sha256": "c278e89af15e9036e57524dddcc1004b8b5fd85bdee1ad56eb38bd18816a5a51"
   },
   "application": {
     "id": "keyku",
@@ -13,7 +13,7 @@
   "implementation": [
     {
       "path": "public/design-system/components.css",
-      "sha256": "ddcf28c9118c88f960d598e555433b640ee201256b60d00bebd6a5aad06d7d51",
+      "sha256": "91240e7e8aec1014271c9fd258da366abc8afcc2450ff26969b3dd985d65df43",
       "roles": [
         "components"
       ]

@@ -9,6 +9,7 @@ const MASKED_KEY = "\u25CF\u25CF\u25CF\u25CF\u25CF - \u25CF\u25CF\u25CF\u25CF\u2
 const appConfig = JSON.parse($("script[data-psu-app-config]").textContent);
 const state = {
   user: null,
+  csrfToken: "",
   authMode: "login",
   keys: [],
   filter: "available",
@@ -178,12 +179,16 @@ async function readJsonResponse(response) {
 }
 
 async function api(path, options = {}) {
+  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  if (state.csrfToken) headers["X-CSRF-Token"] = state.csrfToken;
   const response = await fetch(path, {
     credentials: "same-origin",
     cache: "no-store",
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
     ...options,
+    headers,
   });
+  const nextCsrfToken = response.headers.get("X-CSRF-Token");
+  if (nextCsrfToken) state.csrfToken = nextCsrfToken;
   const data = await readJsonResponse(response);
   if (response.status === 401 && path !== "/api/auth/me") {
     setAuthMode("login");
@@ -365,6 +370,7 @@ function bindEvents() {
     if (!(await confirmAction("Sign out", "End the current session?", "Sign out"))) return;
     await api("/api/auth/logout", { method: "POST", body: "{}" }).catch(() => {});
     state.user = null;
+    state.csrfToken = "";
     state.keys = [];
     closeAllSheets();
     setAuthMode("login");
@@ -382,7 +388,7 @@ function bindEvents() {
   $$(".psu-segmented-control [data-filter]").forEach((button) => {
     button.addEventListener("click", () => {
       state.filter = button.dataset.filter;
-      $$(".psu-segmented-control [data-filter]").forEach((candidate) => candidate.setAttribute("aria-selected", String(candidate === button)));
+      $$(".psu-segmented-control [data-filter]").forEach((candidate) => candidate.setAttribute("aria-pressed", String(candidate === button)));
       renderKeys();
     });
   });
@@ -513,7 +519,7 @@ function renderKeys() {
 
   if (!state.keys.length) {
     el.rows.innerHTML = `<li class="keyku-empty">
-      <div class="psu-logo-frame" aria-hidden="true"><img src="/assets/logos/keyku.png" alt="" /></div>
+      <div class="psu-logo-frame" aria-hidden="true"><img src="/icons/icon-512.png" alt="" /></div>
       <strong>No keys yet</strong>
       <span>Admins can create keys directly in the vault.</span>
     </li>`;
@@ -869,7 +875,7 @@ async function notificationsClick(event) {
     }
     if (button.dataset.resetReject) path = `/api/admin/password-reset-requests/${encodeURIComponent(id)}/reject`;
     await api(path, { method: "POST", body });
-    showToast("Benachrichtigung aktualisiert", "success");
+    showToast("Notification updated", "success");
     await loadNotifications();
     await loadKeys();
   } catch (error) {
@@ -891,6 +897,11 @@ async function loadSettings() {
       renderSettings({ settings, info, users: users.users || [] });
       return;
     }
+    if (state.settingsMode === "sessions") {
+      const sessions = await api("/api/auth/sessions");
+      renderSettings({ sessions: sessions.sessions || [] });
+      return;
+    }
     const info = state.settingsMode === "about"
       ? await api("/api/app/about")
       : null;
@@ -900,12 +911,13 @@ async function loadSettings() {
   }
 }
 
-function renderSettings({ settings = null, info = null, users = [] } = {}) {
+function renderSettings({ settings = null, info = null, users = [], sessions = [] } = {}) {
   el.settingsTitle.textContent = {
     account: "Account",
     appearance: "Appearance",
+    sessions: "Sessions",
     about: "About",
-    admin: "Admin",
+    admin: "Administration",
   }[state.settingsMode] || "Account";
   if (state.settingsMode === "admin") {
     el.settingsBody.innerHTML = adminSettingsHtml(settings, info, users);
@@ -917,6 +929,10 @@ function renderSettings({ settings = null, info = null, users = [] } = {}) {
   }
   if (state.settingsMode === "appearance") {
     el.settingsBody.innerHTML = appearanceSettingsHtml();
+    return;
+  }
+  if (state.settingsMode === "sessions") {
+    el.settingsBody.innerHTML = sessionSettingsHtml(sessions);
     return;
   }
   el.settingsBody.innerHTML = accountSettingsHtml();
@@ -969,7 +985,7 @@ function appearanceSettingsHtml() {
         ${themeButton("rose", "Rose", theme)}
         ${themeButton("graphite", "Graphite", theme)}
       </div>
-      <div class="psu-segmented-control" role="tablist" aria-label="Choose mode">
+      <div class="psu-segmented-control" role="group" aria-label="Choose mode">
         ${modeButton("system", "System", mode)}
         ${modeButton("light", "Light", mode)}
         ${modeButton("dark", "Dark", mode)}
@@ -978,10 +994,28 @@ function appearanceSettingsHtml() {
   `;
 }
 
+function sessionSettingsHtml(sessions) {
+  return `
+    <section class="psu-card keyku-section-stack">
+      <h3 class="psu-card-title">Active sessions</h3>
+      <p class="psu-card-text">Review devices signed in to your account and revoke any session you do not recognize.</p>
+      ${sessions.map((session) => `
+        <article class="keyku-list-card">
+          <div>
+            <strong>${escapeHtml(session.current ? "This device" : (session.userAgent || "Unknown device"))}</strong>
+            <small>Last active ${escapeHtml(formatDate(session.lastSeenAt))} · Expires ${escapeHtml(formatDate(session.absoluteExpiresAt))}</small>
+          </div>
+          <button class="psu-button psu-button--${session.current ? "outlined" : "danger"}" type="button" data-session-revoke="${escapeHtml(session.id)}">${session.current ? "Sign out" : "Revoke"}</button>
+        </article>
+      `).join("") || '<div class="keyku-empty is-compact">No active sessions.</div>'}
+    </section>
+  `;
+}
+
 function aboutSettingsHtml(info) {
   return `
     <section class="psu-card keyku-identity-card">
-      <div class="psu-logo-frame" aria-hidden="true"><img src="/assets/logos/keyku.png" alt="" /></div>
+      <div class="psu-logo-frame" aria-hidden="true"><img src="/icons/icon-512.png" alt="" /></div>
       <div>
         <h3 class="psu-card-title">Keyku</h3>
         <p class="psu-card-text">Key Vault</p>
@@ -1001,7 +1035,7 @@ function themeButton(value, label, active) {
 }
 
 function modeButton(value, label, active) {
-  return `<button type="button" data-mode-choice="${value}" aria-selected="${String(value === active)}">${label}</button>`;
+  return `<button type="button" data-mode-choice="${value}" aria-pressed="${String(value === active)}">${label}</button>`;
 }
 
 function adminSettingsHtml(settings, info, users) {
@@ -1016,11 +1050,11 @@ function adminSettingsHtml(settings, info, users) {
     <section class="psu-card keyku-section-stack">
       <h3 class="psu-card-title">Create account</h3>
       <form id="admin-create-user-form" class="keyku-form-grid">
-        <input class="psu-input" name="displayName" placeholder="Display name" required />
-        <input class="psu-input" name="username" placeholder="Username" required minlength="3" maxlength="32" />
-        <input class="psu-input" name="email" placeholder="Email (optional)" type="email" />
-        <select class="psu-input" name="role"><option value="user">User</option><option value="admin">Admin</option></select>
-        <input class="psu-input" name="password" placeholder="Initial password" type="password" required minlength="12" />
+        <label class="psu-field"><span class="psu-label">Display name</span><input class="psu-input" name="displayName" autocomplete="name" required /></label>
+        <label class="psu-field"><span class="psu-label">Username</span><input class="psu-input" name="username" autocomplete="username" required minlength="3" maxlength="32" /></label>
+        <label class="psu-field"><span class="psu-label">Email (optional)</span><input class="psu-input" name="email" autocomplete="email" type="email" /></label>
+        <label class="psu-field"><span class="psu-label">Role</span><select class="psu-input" name="role"><option value="user">User</option><option value="admin">Admin</option></select></label>
+        <label class="psu-field"><span class="psu-label">Initial password</span><input class="psu-input" name="password" autocomplete="new-password" type="password" required minlength="12" /></label>
         <button class="psu-button psu-button--filled" type="submit">Create account</button>
       </form>
     </section>
@@ -1037,7 +1071,7 @@ function adminSettingsHtml(settings, info, users) {
       </div>
     </section>
     <section class="psu-technical-card keyku-section-stack keyku-admin-info-card">
-      <h3 class="psu-card-title">Admin Info</h3>
+      <h3 class="psu-card-title">Administration diagnostics</h3>
       ${technicalRow("App", info?.app?.name)}
       ${technicalRow("Version", info?.app?.version)}
       ${technicalRow("Build", info?.app?.buildDate || "local")}
@@ -1059,6 +1093,7 @@ async function settingsClick(event) {
   const theme = event.target.closest("[data-theme-choice]");
   const mode = event.target.closest("[data-mode-choice]");
   const maintenance = event.target.closest("[data-maintenance]");
+  const sessionRevoke = event.target.closest("[data-session-revoke]");
   const copyAdmin = event.target.closest("[data-copy-admin-info]");
   if (theme) {
     setPixelSoftUtilityTheme(theme.dataset.themeChoice);
@@ -1072,6 +1107,22 @@ async function settingsClick(event) {
   }
   if (copyAdmin) {
     await copyText(el.settingsBody.querySelector(".keyku-admin-info-card")?.innerText || "", "Debug details copied");
+    return;
+  }
+  if (sessionRevoke) {
+    const current = sessionRevoke.textContent.trim() === "Sign out";
+    if (!(await confirmAction(current ? "Sign out" : "Revoke session", current ? "End this session?" : "End this session on the other device?", current ? "Sign out" : "Revoke"))) return;
+    const result = await api(`/api/auth/sessions/${encodeURIComponent(sessionRevoke.dataset.sessionRevoke)}`, { method: "DELETE", body: "{}" });
+    if (result.current) {
+      state.user = null;
+      state.csrfToken = "";
+      closeAllSheets();
+      setAuthMode("login");
+      showView("auth");
+      return;
+    }
+    showToast("Session revoked", "success");
+    await loadSettings();
     return;
   }
   if (maintenance) {
@@ -1160,13 +1211,17 @@ document.addEventListener("submit", async (event) => {
 function openSheet(selector) {
   const sheet = $(selector);
   if (!sheet) return;
+  sheet.__psuReturnFocus = document.activeElement;
   sheet.hidden = false;
   sheet.querySelector("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")?.focus();
 }
 
 function closeSheet(selector) {
   const sheet = $(selector);
-  if (sheet) sheet.hidden = true;
+  if (!sheet) return;
+  sheet.hidden = true;
+  if (sheet.__psuReturnFocus instanceof HTMLElement && sheet.__psuReturnFocus.isConnected) sheet.__psuReturnFocus.focus();
+  sheet.__psuReturnFocus = null;
 }
 
 function closeAllSheets() {
@@ -1185,6 +1240,7 @@ function confirmAction(title, message, confirmLabel = "Run") {
       el.confirmCancel.removeEventListener("click", onCancel);
       el.confirmOk.removeEventListener("click", onOk);
       el.confirmDialog.removeEventListener("click", onBackdrop);
+      el.confirmDialog.removeEventListener("keydown", onKeydown);
       resolve(value);
     };
     const onCancel = () => cleanup(false);
@@ -1192,9 +1248,16 @@ function confirmAction(title, message, confirmLabel = "Run") {
     const onBackdrop = (event) => {
       if (event.target === el.confirmDialog) cleanup(false);
     };
+    const onKeydown = (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      cleanup(false);
+    };
     el.confirmCancel.addEventListener("click", onCancel);
     el.confirmOk.addEventListener("click", onOk);
     el.confirmDialog.addEventListener("click", onBackdrop);
+    el.confirmDialog.addEventListener("keydown", onKeydown);
   });
 }
 

@@ -16,7 +16,7 @@ Require a valid lowercase app ID, display name, product purpose, approved requir
 3. Complete `repository/appspec.yaml` with unique requirement IDs and remove every placeholder.
 4. Implement the standard Node 24 LTS, TypeScript, Fastify, React, SQLite/Drizzle profile using platform validation, identity, revocable sessions, permissions, logging, health, manifest, UI, and error contracts.
 5. Add migrations, seed/test factories, secrets via files or runtime injection, non-root Docker, Compose example, `.env.example`, README, changelog, license notices, About/version/build data, and backup/restore/upgrade procedures.
-6. Add unit, integration, contract, migration, E2E, axe, visual, security, performance, Docker-smoke, backup/restore, and upgrade tests. Generate traceability.
+6. Invoke `$ishiku-icon-generator` to create and validate the app icon, favicon, and PWA exports unless approved assets already exist. Add unit, integration, contract, migration, E2E, axe, visual, security, performance, Docker-smoke, backup/restore, and upgrade tests. Generate traceability.
 7. Synchronize the kit and install immutable, least-privilege PR, release, and update workflows.
 8. Run full verification, then export or clone the repository to a temporary independent directory and repeat it.
 

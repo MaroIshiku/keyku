@@ -1,0 +1,18 @@
+schema_version: 1
+application: keyku
+purpose: "Shared key inventory, redemption, and reactivation requests."
+category: "Libraries & Collections"
+tile_color: "#FFD37A"
+accent_color: "#8A5100"
+symbol_rationale: "Key with a compact inventory grid and no third-party brand mark."
+generation_path: built-in-imagegen-approved-source
+native_source_dimensions: 1254x1254
+source_mode: RGBA
+export_method: direct-lanczos-downsample-no-crop-no-mask-change
+alpha_margin_left_px: 22
+alpha_margin_top_px: 30
+alpha_margin_right_px: 22
+alpha_margin_bottom_px: 36
+alpha_margin_max_ratio: 0.028708
+repository_integrated: true
+github_uploaded: false

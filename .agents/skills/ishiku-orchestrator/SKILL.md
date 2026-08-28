@@ -17,7 +17,7 @@ Require the user goal and the target workspace or app. Discover the AppSpec, `wo
 4. Stop for user clarification when a security, architecture, data, compatibility, release, or destructive decision is materially open. Document small reversible assumptions.
 5. Write an ordered implementation and rollback plan. Classify risk A–D.
 6. Implement without silently removing behavior. Keep app-specific Git edits inside `repository/`.
-7. Run the test-engineer, security-review, design-review, Docker-review, release, and upstream workflows when applicable.
+7. Run the test-engineer, security-review, design-review, `$ishiku-icon-generator`, Docker-review, release, and upstream workflows when applicable.
 8. Run `node .ishiku/kit/scripts/verify-app . --full` from an app clone, or `pnpm ishiku:verify` at workspace scope.
 9. Reconcile every AppSpec requirement with the traceability report and remaining deviations.
 
