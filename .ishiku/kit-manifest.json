@@ -39,14 +39,6 @@
       "sha256": "b2f7f9a3350f84e9d529cc141405008a45b287dd781f4fc890b2e5d5e62ab994"
     },
     {
-      "path": ".agents/skills/ishiku-icon-generator/scripts/__pycache__/export_pngs.cpython-312.pyc",
-      "sha256": "4deb121ea23a6908b2a6f01ca92cda704d0628bd07c9281e1e25df264d55a3bd"
-    },
-    {
-      "path": ".agents/skills/ishiku-icon-generator/scripts/__pycache__/validate_icon.cpython-312.pyc",
-      "sha256": "0c19b3274dc5500deb3b908ac3016f6e926b1e40e90bc22a239e5cac1b181d1e"
-    },
-    {
       "path": ".agents/skills/ishiku-icon-generator/scripts/export_pngs.py",
       "sha256": "c9a5ed96c591d9ec0fdc2f8480f00b4c40060c86e57c831234b3fca810e9e6d0"
     },
@@ -270,6 +262,7 @@
     ".github/workflows/ishiku-release-release.yml"
   ],
   "local_changes": [
-    ".github/workflows/ishiku-release-release.yml: Keyku multi-architecture build and digest vulnerability gates"
+    ".github/workflows/ishiku-release-release.yml: Keyku multi-architecture build and digest vulnerability gates",
+    ".agents/skills/ishiku-icon-generator/scripts/__pycache__/: exclude transient platform-specific Python bytecode from managed release files"
   ]
 }

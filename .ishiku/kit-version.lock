@@ -14,8 +14,6 @@
     ".agents/skills/ishiku-icon-generator/agents/openai.yaml": "d92779e9e70e56fe4888a0b5e149b149d400201b45538047ddb1aa2ea12cdadc",
     ".agents/skills/ishiku-icon-generator/references/raster-source.md": "80d2153a01827c9f32d8e09d7af79fe7151481401c9beb6f122029f5e0a8d476",
     ".agents/skills/ishiku-icon-generator/references/webapp-import.md": "b2f7f9a3350f84e9d529cc141405008a45b287dd781f4fc890b2e5d5e62ab994",
-    ".agents/skills/ishiku-icon-generator/scripts/__pycache__/export_pngs.cpython-312.pyc": "4deb121ea23a6908b2a6f01ca92cda704d0628bd07c9281e1e25df264d55a3bd",
-    ".agents/skills/ishiku-icon-generator/scripts/__pycache__/validate_icon.cpython-312.pyc": "0c19b3274dc5500deb3b908ac3016f6e926b1e40e90bc22a239e5cac1b181d1e",
     ".agents/skills/ishiku-icon-generator/scripts/export_pngs.py": "c9a5ed96c591d9ec0fdc2f8480f00b4c40060c86e57c831234b3fca810e9e6d0",
     ".agents/skills/ishiku-icon-generator/scripts/prepare_webapp_icons.py": "9f43b9e417c1599f01b2537656fe693235a4e645da8d9d1d1d445a999cfdb5a6",
     ".agents/skills/ishiku-icon-generator/scripts/validate_icon.py": "4080b412f768804201ba5254bd91e5ee28c160aee1baae30c0d26d3c3acf2b9c",
