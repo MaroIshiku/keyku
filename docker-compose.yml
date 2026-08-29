@@ -1,5 +1,39 @@
 name: keyku
 services:
+  keyku-init:
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+    cap_drop:
+      - ALL
+    cpus: 0.25
+    entrypoint:
+      - /bin/sh
+      - -eu
+      - -c
+      - |
+        find /data -xdev -exec chown -h 10001:10001 {} +
+        find /data -xdev -type d -exec chmod 0750 {} +
+        find /data -xdev -type f -exec chmod 0600 {} +
+    image: ghcr.io/maroishiku/keyku:v0.3.1
+    mem_limit: "33554432"
+    network_mode: none
+    pids_limit: 32
+    privileged: false
+    pull_policy: always
+    read_only: true
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+    user: "0:0"
+    volumes:
+      - type: bind
+        source: /DATA/AppData/keyku/data
+        target: /data
+        bind:
+          create_host_path: true
+          selinux: Z
   keyku:
     cap_drop:
       - ALL
@@ -7,6 +41,9 @@ services:
     cpu_shares: 90
     command: []
     container_name: keyku
+    depends_on:
+      keyku-init:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:
@@ -39,7 +76,7 @@ services:
       retries: 3
       start_period: 10s
     hostname: keyku
-    image: ghcr.io/maroishiku/keyku:v0.3.0
+    image: ghcr.io/maroishiku/keyku:v0.3.1
     init: true
     labels:
       icon: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/icons/icon-512.png
@@ -71,6 +108,10 @@ services:
       - type: bind
         source: /DATA/AppData/keyku/data
         target: /data
+        bind:
+          create_host_path: true
+          selinux: Z
+    user: "10001:10001"
     devices: []
     networks:
       - keyku
@@ -119,6 +160,9 @@ x-casaos:
 
 
         Persistent data is stored on the ZimaOS host at /DATA/AppData/keyku/data and mounted into the container at /data.
+
+
+        Keyku automatically prepares ownership and restrictive permissions for fresh and legacy data directories before the non-root web service starts.
 
 
         Publish the WebUI through HTTPS when exposing the app outside your local network.

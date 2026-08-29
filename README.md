@@ -47,6 +47,8 @@ docker compose pull
 docker compose up -d
 ```
 
+The Compose delivery includes a bounded, network-disabled one-shot initializer. It prepares a newly created or legacy `/data` bind mount for UID/GID `10001`, then exits before the non-root Keyku service starts. Do not remove the `keyku-init` service or its `depends_on` gate.
+
 Before the first start, edit `docker-compose.yml` and replace:
 
 ```yaml
@@ -137,7 +139,7 @@ The container runs as UID/GID `10001`. When using a bind mount outside the suppl
 
 ## Updates and Backup
 
-Before every update, stop Keyku and copy the complete persistent directory. Version 0.3.0 upgrades legacy PBKDF2 password hashes to Argon2id after a successful sign-in, so a rollback to 0.2.5 must restore the matching pre-upgrade data backup as well as the older image.
+Before every update, stop Keyku and copy the complete persistent directory. Version 0.3.0 and later upgrade legacy PBKDF2 password hashes to Argon2id after a successful sign-in, so a rollback to 0.2.5 must restore the matching pre-upgrade data backup as well as the older image. Version 0.3.1 adds automatic permission preparation for both root-owned 0.2.5 data and fresh ZimaOS bind directories while keeping the web service non-root.
 
 ```bash
 docker compose stop

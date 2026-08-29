@@ -56,7 +56,8 @@
       "acceptance": [
         "A fresh clone can build, test, and run without the outer workspace.",
         "Health checks, persistent data, runtime secrets, backup, restore, and upgrade procedures are verifiable.",
-        "The ZimaOS host port is 65005 as reserved for application_id keyku; the compatible container port remains 3000."
+        "Fresh and legacy bind-mounted data directories are prepared by a bounded one-shot initializer before the non-root application starts.",
+        "The ZimaOS host port is 65005 as assigned to application_id keyku; the compatible container port remains 3000."
       ],
       "security_critical": true
     },

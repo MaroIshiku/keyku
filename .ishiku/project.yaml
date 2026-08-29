@@ -47,7 +47,12 @@
       },
       {
         "name": "container",
-        "command": "docker build -t keyku:verify .",
+        "command": "docker build --load -t keyku:verify .",
+        "required_for_verified": true
+      },
+      {
+        "name": "container-migration",
+        "command": "sh tests/test-container-migration.sh",
         "required_for_verified": true
       }
     ]

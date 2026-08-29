@@ -2,6 +2,17 @@
 
 All notable changes to Keyku are documented here. Releases use immutable semantic-version tags.
 
+## 0.3.1 - 2026-08-29
+
+- Added a bounded, network-disabled one-shot data initializer for fresh ZimaOS bind mounts and root-owned data created by Keyku 0.2.5.
+- Kept the long-running Keyku service on UID/GID `10001`, with no capabilities, no privilege escalation, and a read-only root filesystem.
+- Added executable fresh-install, legacy-data, ownership, restart, and PBKDF2-to-Argon2id migration coverage.
+
+### Compatibility and rollback
+
+- Existing data stays at `/DATA/AppData/keyku/data`; no manual ownership change is required when using the complete 0.3.1 Compose file.
+- Back up the complete data directory before upgrading. Rolling back to 0.2.5 still requires the matching pre-upgrade data backup.
+
 ## 0.3.0 - 2026-08-28
 
 - Updated the ishiku application kit and design binding.

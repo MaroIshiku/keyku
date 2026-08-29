@@ -1,9 +1,45 @@
 name: keyku
 
 services:
+  keyku-init:
+    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.1}
+    user: "0:0"
+    restart: "no"
+    read_only: true
+    network_mode: none
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+    security_opt:
+      - no-new-privileges:true
+    privileged: false
+    pids_limit: 32
+    mem_limit: 32m
+    cpus: 0.25
+    entrypoint:
+      - /bin/sh
+      - -eu
+      - -c
+      - |
+        find /data -xdev -exec chown -h 10001:10001 {} +
+        find /data -xdev -type d -exec chmod 0750 {} +
+        find /data -xdev -type f -exec chmod 0600 {} +
+    volumes:
+      - type: bind
+        source: ${KEYKU_DATA_PATH:-/DATA/AppData/keyku/data}
+        target: /data
+        bind:
+          create_host_path: true
+          selinux: Z
   keyku:
-    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.0}
+    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.1}
     container_name: keyku
+    depends_on:
+      keyku-init:
+        condition: service_completed_successfully
     init: true
     restart: unless-stopped
     user: "10001:10001"
@@ -17,7 +53,7 @@ services:
     cpus: 0.5
     ports:
       - target: 3000
-        published: "65005"
+        published: "${KEYKU_PUBLISHED_PORT:-65005}"
         protocol: tcp
     environment:
       TZ: "Europe/Berlin"
@@ -27,15 +63,18 @@ services:
       ISHIKU_DATA_DIR: "/data"
       ISHIKU_LOG_LEVEL: "info"
       ISHIKU_TRUST_PROXY: "false"
-      ISHIKU_SETUP_SECRET: ""
+      ISHIKU_SETUP_SECRET: "${ISHIKU_SETUP_SECRET:-}"
       PORT: "3000"
       PUBLIC_DIR: "/app/public"
       # Optional hardened alternative:
       # ISHIKU_SETUP_SECRET_FILE: "/run/secrets/ishiku_setup_secret"
     volumes:
       - type: bind
-        source: /DATA/AppData/keyku/data
+        source: ${KEYKU_DATA_PATH:-/DATA/AppData/keyku/data}
         target: /data
+        bind:
+          create_host_path: true
+          selinux: Z
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3000/readyz', timeout=3).read()"]
       interval: 30s

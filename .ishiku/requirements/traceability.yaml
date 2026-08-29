@@ -34,7 +34,7 @@
     {
       "id": "OPS-001",
       "implementation": ["Dockerfile", "docker-compose.yml", "docker-compose.example.yml", ".env.example", "README.md"],
-      "tests": {"unit": [], "integration": ["docker compose -f docker-compose.example.yml config --quiet", "docker build -t keyku:verify .", ".ishiku/reports/ops-001-verification.json"], "e2e": [], "security": [".ishiku/kit/scripts/check-security"]},
+      "tests": {"unit": [], "integration": ["docker compose -f docker-compose.example.yml config --quiet", "docker build --load -t keyku:verify .", "tests/test-container-migration.sh", ".ishiku/reports/ops-001-verification.json"], "e2e": [], "security": [".ishiku/kit/scripts/check-security", "tests/test-container-migration.sh"]},
       "status": "verified"
     },
     {
