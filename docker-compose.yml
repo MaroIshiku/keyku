@@ -16,7 +16,7 @@ services:
         find /data -xdev -exec chown -h 10001:10001 {} +
         find /data -xdev -type d -exec chmod 0750 {} +
         find /data -xdev -type f -exec chmod 0600 {} +
-    image: ghcr.io/maroishiku/keyku:v0.3.1
+    image: ghcr.io/maroishiku/keyku:v0.3.2
     mem_limit: "33554432"
     network_mode: none
     pids_limit: 32
@@ -54,10 +54,8 @@ services:
           devices: []
     environment:
       - ISHIKU_APP_URL=
-      - ISHIKU_BASE_PATH=/
       - ISHIKU_COOKIE_SECURE=auto
       - ISHIKU_DATA_DIR=/data
-      - ISHIKU_LOG_LEVEL=info
       - ISHIKU_SETUP_SECRET=
       - ISHIKU_TRUST_PROXY=false
       - PORT=3000
@@ -76,7 +74,7 @@ services:
       retries: 3
       start_period: 10s
     hostname: keyku
-    image: ghcr.io/maroishiku/keyku:v0.3.1
+    image: ghcr.io/maroishiku/keyku:v0.3.2
     init: true
     labels:
       icon: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/icons/icon-512.png

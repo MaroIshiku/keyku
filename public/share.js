@@ -54,7 +54,7 @@ async function loadShare() {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Share link not found");
     sharedKey = data.key;
-    title.textContent = data.game || "Steam-Key";
+    title.textContent = data.game || "Steam key";
     meta.textContent = data.redeemed && data.redeemedAt
       ? `Redeemed on ${formatDate(data.redeemedAt)}`
       : "Public key link";

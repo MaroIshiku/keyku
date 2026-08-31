@@ -5,7 +5,7 @@
     {
       "id": "CORE-001",
       "implementation": ["python/app.py", "public/index.html", "public/script.js", "public/share.html", "public/share.js"],
-      "tests": {"unit": ["tests/test_app.py"], "integration": ["tests/test_app.py", ".ishiku/kit/scripts/compliance-test"], "e2e": [], "security": ["tests/test_app.py"]},
+      "tests": {"unit": ["tests/test_app.py"], "integration": ["tests/test_app.py", ".ishiku/kit/scripts/compliance-test"], "e2e": ["tests/e2e/keyku.spec.mjs"], "security": ["tests/test_app.py"]},
       "status": "verified"
     },
     {
@@ -14,7 +14,7 @@
       "tests": {
         "unit": ["tests/test_app.py"],
         "integration": ["tests/test_app.py"],
-        "e2e": [],
+        "e2e": ["tests/e2e/keyku.spec.mjs"],
         "security": ["tests/test_app.py::test_setup_uses_argon2_and_csrf_protects_mutations", "tests/test_app.py::test_login_is_generic_rate_limited_and_upgrades_legacy_pbkdf2", "tests/test_app.py::test_sessions_are_listed_revocable_and_expire", "tests/test_app.py::test_cross_site_and_oversized_requests_fail_closed", "tests/test_app.py::test_password_change_revokes_other_sessions_and_rotates_current"]
       },
       "status": "verified"
@@ -22,19 +22,19 @@
     {
       "id": "UI-001",
       "implementation": ["public/index.html", "public/share.html", "public/style.css", "public/design-system/", ".ishiku/design-system.lock"],
-      "tests": {"unit": [], "integration": [".ishiku/kit/scripts/check-design"], "e2e": [], "security": []},
+      "tests": {"unit": [], "integration": [".ishiku/kit/scripts/check-design"], "e2e": ["tests/e2e/keyku.spec.mjs"], "security": []},
       "status": "verified"
     },
     {
       "id": "ICON-001",
       "implementation": ["assets/icon-source.png", "assets/icon-notes.yaml", "public/icons/", "public/manifest.webmanifest", "app.manifest.json"],
-      "tests": {"unit": [], "integration": [".agents/skills/ishiku-icon-generator/scripts/validate_icon.py"], "e2e": [], "security": []},
+      "tests": {"unit": [], "integration": [".agents/skills/ishiku-icon-generator/scripts/validate_icon.py"], "e2e": ["tests/e2e/keyku.spec.mjs"], "security": []},
       "status": "verified"
     },
     {
       "id": "OPS-001",
       "implementation": ["Dockerfile", "docker-compose.yml", "docker-compose.example.yml", ".env.example", "README.md"],
-      "tests": {"unit": [], "integration": ["docker compose -f docker-compose.example.yml config --quiet", "docker build --load -t keyku:verify .", "tests/test-container-migration.sh", ".ishiku/reports/ops-001-verification.json"], "e2e": [], "security": [".ishiku/kit/scripts/check-security", "tests/test-container-migration.sh"]},
+      "tests": {"unit": [], "integration": ["docker compose -f docker-compose.example.yml config --quiet", "docker build --load -t keyku:verify .", "tests/test-container-migration.sh", ".ishiku/reports/ops-001-verification.json"], "e2e": ["tests/e2e/keyku.spec.mjs"], "security": [".ishiku/kit/scripts/check-security", "tests/test-container-migration.sh"]},
       "status": "verified"
     },
     {

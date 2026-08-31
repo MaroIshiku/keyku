@@ -20,7 +20,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 APP_ID = "keyku"
 APP_NAME = "Keyku - Key Vault"
 APP_SUBTITLE = "Secure Steam key sharing"
-APP_VERSION = os.environ.get("APP_VERSION", "0.3.1")
+APP_VERSION = os.environ.get("APP_VERSION", "0.3.2")
 APP_BUILD_DATE = os.environ.get("APP_BUILD_DATE", "local")
 APP_GIT_SHA = os.environ.get("GITHUB_SHA", os.environ.get("APP_GIT_SHA", "local"))
 PORT = int(os.environ.get("PORT", "3000"))
@@ -281,16 +281,20 @@ def read_setup_secret():
             secret = file_path.read_text(encoding="utf-8").strip()
         except OSError:
             return {"ok": False, "secret": "", "errorKey": SETUP_SECRET_FILE_ENV, "message": f"{SETUP_SECRET_FILE_ENV} is unreadable."}
-        if secret:
+        if len(secret) >= 32:
             return {"ok": True, "secret": secret, "source": "file"}
+        if secret:
+            return {"ok": False, "secret": "", "errorKey": SETUP_SECRET_FILE_ENV, "message": f"{SETUP_SECRET_FILE_ENV} must contain at least 32 characters."}
         return {"ok": False, "secret": "", "errorKey": SETUP_SECRET_FILE_ENV, "message": f"{SETUP_SECRET_FILE_ENV} is empty."}
 
     if file_was_explicit:
         return {"ok": False, "secret": "", "errorKey": SETUP_SECRET_FILE_ENV, "message": f"{SETUP_SECRET_FILE_ENV} is configured but missing."}
 
     env_secret = os.environ.get(SETUP_SECRET_ENV, "").strip()
-    if env_secret:
+    if len(env_secret) >= 32:
         return {"ok": True, "secret": env_secret, "source": "env"}
+    if env_secret:
+        return {"ok": False, "secret": "", "errorKey": SETUP_SECRET_ENV, "message": f"{SETUP_SECRET_ENV} must contain at least 32 characters."}
 
     return {"ok": False, "secret": "", "errorKey": SETUP_SECRET_ENV, "message": f"{SETUP_SECRET_ENV} or {SETUP_SECRET_FILE_ENV} is required."}
 
@@ -305,7 +309,7 @@ def setup_status_payload():
         "setupCompleted": False,
         "setupConfigured": bool(secret.get("ok")),
         "errorKey": None if secret.get("ok") else secret.get("errorKey"),
-        "message": None if secret.get("ok") else "Setup secret is not configured.",
+        "message": None if secret.get("ok") else secret.get("message"),
     }
 
 
@@ -757,6 +761,23 @@ def security_headers(response):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     if request.path.startswith("/api/"):
         response.headers["Cache-Control"] = "no-store"
+        payload = response.get_json(silent=True) if response.is_json else None
+        if response.status_code >= 400 and isinstance(payload, dict) and isinstance(payload.get("error"), str):
+            error_codes = {
+                400: "invalid_request",
+                401: "authentication_required",
+                403: "forbidden",
+                404: "not_found",
+                409: "conflict",
+                413: "payload_too_large",
+                422: "validation_failed",
+                429: "rate_limited",
+                503: "service_unavailable",
+            }
+            payload.setdefault("code", error_codes.get(response.status_code, "request_failed"))
+            payload.setdefault("message", payload["error"])
+            payload.setdefault("requestId", getattr(g, "request_id", ""))
+            response.set_data(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
     return response
 
 
@@ -811,7 +832,7 @@ def api_setup_register_admin():
 
     secret_state = read_setup_secret()
     if not secret_state.get("ok"):
-        return jsonify({"error": "Setup secret is not configured.", "errorKey": secret_state.get("errorKey")}), 503
+        return jsonify({"error": secret_state.get("message") or "Setup secret is not configured.", "errorKey": secret_state.get("errorKey")}), 503
 
     body = json_body()
     error = validate_setup_admin(body, secret_state["secret"])

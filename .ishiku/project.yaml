@@ -41,6 +41,11 @@
         "required_for_verified": true
       },
       {
+        "name": "browser",
+        "command": "node tests/run-browser.mjs",
+        "required_for_verified": true
+      },
+      {
         "name": "compose",
         "command": "docker compose -f docker-compose.example.yml config --quiet",
         "required_for_verified": true
@@ -61,6 +66,8 @@
     {"id": "python-runtime", "source": "docker.io/library/python:3.14-alpine", "strategy": "container"},
     {"id": "flask", "source": "https://pypi.org/project/Flask/", "strategy": "dependency"},
     {"id": "gunicorn", "source": "https://pypi.org/project/gunicorn/", "strategy": "dependency"},
-    {"id": "argon2-cffi", "source": "https://pypi.org/project/argon2-cffi/", "strategy": "dependency"}
+    {"id": "argon2-cffi", "source": "https://pypi.org/project/argon2-cffi/", "strategy": "dependency"},
+    {"id": "playwright", "source": "https://www.npmjs.com/package/@playwright/test", "strategy": "dependency"},
+    {"id": "axe-core", "source": "https://www.npmjs.com/package/axe-core", "strategy": "dependency"}
   ]
 }

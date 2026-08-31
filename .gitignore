@@ -1,4 +1,5 @@
 nodejs/
+node_modules/
 __pycache__/
 *.pyc
 .pytest_cache/
@@ -21,4 +22,5 @@ source-assets/
 *.db
 *.bak
 .ishiku/reports/*.json
+.ishiku/reports/browser/
 !.ishiku/reports/ops-001-verification.json

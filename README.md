@@ -55,7 +55,7 @@ Before the first start, edit `docker-compose.yml` and replace:
 - ISHIKU_SETUP_SECRET=
 ```
 
-with a long random setup secret of your own.
+with a random setup secret of at least 32 characters.
 
 The app is available at:
 
@@ -79,13 +79,11 @@ Enter the setup secret, display name, admin username, and admin password in the 
 | --- | --- |
 | `TZ` | Time zone, recommended `Europe/Berlin` |
 | `ISHIKU_APP_URL` | Public URL behind a reverse proxy, used for share links |
-| `ISHIKU_BASE_PATH` | Optional base path, default `/` |
 | `ISHIKU_DATA_DIR` | Persistent data directory in the container, default `/data` |
-| `ISHIKU_LOG_LEVEL` | Log level, default `info` |
 | `ISHIKU_TRUST_PROXY` | Set to `true` when running behind a trusted reverse proxy |
 | `ISHIKU_COOKIE_SECURE` | `auto` enables secure cookies for HTTPS; set explicitly only for a documented deployment need |
-| `ISHIKU_SETUP_SECRET` | Simple first-run setup secret for Docker Compose |
-| `ISHIKU_SETUP_SECRET_FILE` | Optional path to a mounted Docker secret file |
+| `ISHIKU_SETUP_SECRET` | First-run setup secret of at least 32 characters for Docker Compose |
+| `ISHIKU_SETUP_SECRET_FILE` | Optional file containing a first-run setup secret of at least 32 characters |
 | `PORT` | Internal HTTP port, default `3000` |
 
 ### Docker Secrets
@@ -134,12 +132,13 @@ The container runs as UID/GID `10001`. When using a bind mount outside the suppl
 - Normal key list responses never include plaintext keys.
 - Share links are public, cryptic, and HMAC-based.
 - API responses use `Cache-Control: no-store`.
+- Error responses expose the stable `code`, `message`, and `requestId` envelope while retaining the legacy `error` field for older clients.
 - Security headers include content type protection, referrer policy, permissions policy, frame protection, and a restrictive Content Security Policy.
 - Do not commit real secrets, `.env` files, logs, or runtime data.
 
 ## Updates and Backup
 
-Before every update, stop Keyku and copy the complete persistent directory. Version 0.3.0 and later upgrade legacy PBKDF2 password hashes to Argon2id after a successful sign-in, so a rollback to 0.2.5 must restore the matching pre-upgrade data backup as well as the older image. Version 0.3.1 adds automatic permission preparation for both root-owned 0.2.5 data and fresh ZimaOS bind directories while keeping the web service non-root.
+Before every update, stop Keyku and copy the complete persistent directory. Version 0.3.0 and later upgrade legacy PBKDF2 password hashes to Argon2id after a successful sign-in, so a rollback to 0.2.5 must restore the matching pre-upgrade data backup as well as the older image. Version 0.3.1 adds automatic permission preparation for both root-owned 0.2.5 data and fresh ZimaOS bind directories while keeping the web service non-root. Version 0.3.2 keeps that data format unchanged; existing completed installations continue to start even if an old setup-secret value was shorter than the new first-run minimum.
 
 ```bash
 docker compose stop
@@ -154,6 +153,12 @@ To roll back, stop Keyku, restore the complete pre-upgrade data directory, set t
 ## Development
 
 Frontend files are static in `public/`; the backend is in `python/app.py`.
+
+Run the complete clone-local gate with Node.js 24, Python 3.14, and Docker available:
+
+```bash
+node .ishiku/kit/scripts/verify-app . --full
+```
 
 ```bash
 docker build -t keyku:local .

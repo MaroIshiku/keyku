@@ -64,6 +64,11 @@ def test_setup_uses_argon2_and_csrf_protects_mutations(keyku):
 
     denied = client.post("/api/admin/keys", json={"game": "Synthetic Game", "key": "AAAA-BBBB-CCCC"})
     assert denied.status_code == 403
+    denied_payload = denied.get_json()
+    assert denied_payload["error"] == "Request verification failed. Refresh the page and try again."
+    assert denied_payload["message"] == denied_payload["error"]
+    assert denied_payload["code"] == "forbidden"
+    assert len(denied_payload["requestId"]) == 24
     created = client.post(
         "/api/admin/keys",
         json={"game": "Synthetic Game", "key": "AAAA-BBBB-CCCC"},
@@ -102,7 +107,10 @@ def test_login_is_generic_rate_limited_and_upgrades_legacy_pbkdf2(keyku):
     missing = client.post("/api/auth/login", json={"username": "missing-user", "password": "wrong"})
     inactive = client.post("/api/auth/login", json={"username": "pending-user", "password": "pending-password-123456"})
     assert missing.status_code == inactive.status_code == 401
-    assert missing.get_json() == inactive.get_json() == {"error": "Username or password is incorrect."}
+    assert missing.get_json()["error"] == inactive.get_json()["error"] == "Username or password is incorrect."
+    assert missing.get_json()["code"] == inactive.get_json()["code"] == "authentication_required"
+    assert missing.get_json()["message"] == inactive.get_json()["message"] == "Username or password is incorrect."
+    assert missing.get_json()["requestId"] != inactive.get_json()["requestId"]
 
     logged_in = client.post("/api/auth/login", json={"username": "legacy-user", "password": "legacy-password-123456"})
     assert logged_in.status_code == 200
@@ -159,6 +167,40 @@ def test_cross_site_and_oversized_requests_fail_closed(keyku):
         headers={"X-CSRF-Token": csrf},
     )
     assert oversized.status_code == 413
+
+
+def test_short_setup_secret_is_rejected_without_blocking_existing_install(tmp_path, monkeypatch):
+    monkeypatch.setenv("ISHIKU_DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("ISHIKU_SETUP_SECRET", "too-short")
+    monkeypatch.setenv("PUBLIC_DIR", str(Path(__file__).resolve().parents[1] / "public"))
+    monkeypatch.setenv("ISHIKU_COOKIE_SECURE", "false")
+    module_name = f"keyku_test_{uuid.uuid4().hex}"
+    source = Path(__file__).resolve().parents[1] / "python" / "app.py"
+    spec = importlib.util.spec_from_file_location(module_name, source)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    module.app.config.update(TESTING=True)
+    try:
+        client = module.app.test_client()
+        status = client.get("/api/setup/status").get_json()
+        assert status["setupRequired"] is True
+        assert status["setupConfigured"] is False
+        assert status["message"] == "ISHIKU_SETUP_SECRET must contain at least 32 characters."
+        assert client.get("/readyz").status_code == 503
+
+        module.write_users({"users": [{
+            "id": "legacy-admin",
+            "username": "legacy-admin",
+            "displayName": "Legacy Admin",
+            "role": "admin",
+            "status": "approved",
+            **module.hash_password("legacy-admin-password-123456"),
+        }]})
+        module.write_setup_state({"setupCompleted": True})
+        assert client.get("/readyz").status_code == 200
+    finally:
+        sys.modules.pop(module_name, None)
 
 
 def test_password_change_revokes_other_sessions_and_rotates_current(keyku):

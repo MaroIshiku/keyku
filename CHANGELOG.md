@@ -2,6 +2,22 @@
 
 All notable changes to Keyku are documented here. Releases use immutable semantic-version tags.
 
+## 0.3.2 - 2026-08-31
+
+- Restored the current clone-local ishiku design verifier and removed stale synchronization-conflict artifacts from the embedded kit.
+- Added reproducible Playwright and axe-core coverage for setup, authentication, vault behavior, sharing, keyboard focus, all themes and modes, and all required responsive viewports.
+- Fixed the WCAG contrast of the available-key status in light mode.
+- Added the stable API error envelope while retaining the legacy `error` response field for older clients.
+- Enforced the 32-character first-run setup-secret minimum without blocking already configured legacy installations.
+- Updated GitHub Actions to current immutable releases with full commit pins and Node.js 24-compatible action runtimes.
+- Corrected PWA icon purpose metadata, an accessible label, declared upstreams, and unused configuration documentation.
+
+### Compatibility and rollback
+
+- The persistent file formats and host/container ports remain unchanged (`65005` to `3000`).
+- Keyku 0.3.2 reads existing 0.2.5, 0.3.0, and 0.3.1 data; the supplied initializer still prepares legacy bind-mount ownership.
+- Back up the complete data directory before upgrading. Rollback to 0.3.1 uses the same data, while rollback to 0.2.5 requires its matching pre-upgrade backup.
+
 ## 0.3.1 - 2026-08-29
 
 - Added a bounded, network-disabled one-shot data initializer for fresh ZimaOS bind mounts and root-owned data created by Keyku 0.2.5.

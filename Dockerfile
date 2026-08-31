@@ -2,9 +2,17 @@
 
 FROM python:3.14-alpine@sha256:05b2b8b732ecd268fee8727a369f936f022d1321b59befd13c30ede22769dcdc
 
-ARG APP_VERSION=0.3.1
+ARG APP_VERSION=0.3.2
 ARG APP_BUILD_DATE=local
 ARG GITHUB_SHA=local
+
+LABEL org.opencontainers.image.title="Keyku - Key Vault" \
+      org.opencontainers.image.description="Self-hosted Steam key vault with first-run admin setup and public share links." \
+      org.opencontainers.image.url="https://github.com/MaroIshiku/keyku" \
+      org.opencontainers.image.source="https://github.com/MaroIshiku/keyku" \
+      org.opencontainers.image.version="$APP_VERSION" \
+      org.opencontainers.image.revision="$GITHUB_SHA" \
+      org.opencontainers.image.created="$APP_BUILD_DATE"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

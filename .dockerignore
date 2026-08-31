@@ -1,4 +1,5 @@
 nodejs
+node_modules
 data
 secrets
 .env
@@ -28,6 +29,9 @@ source-assets
 .ishiku
 assets
 tests
+package.json
+package-lock.json
+playwright.config.mjs
 README.md
 docker-compose*.yml
 appspec.yaml

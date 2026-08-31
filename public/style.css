@@ -173,7 +173,7 @@
 }
 
 .keyku-status.is-free {
-  color: var(--color-success);
+  color: var(--color-on-success-container);
   background: var(--color-success-container);
 }
 

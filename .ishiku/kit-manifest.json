@@ -112,15 +112,15 @@
     },
     {
       "path": ".github/workflows/ishiku-pull-request-verify.yml",
-      "sha256": "87e0ea5002f38cc379e04e941dcdeb4a5e041f0d5eaddc906368ad40eb7c7912"
+      "sha256": "d8bbbcd637b66a742a9a5b9bd43b5f0846035831a1c1f0c08279d7c138e55d8e"
     },
     {
       "path": ".github/workflows/ishiku-release-release.yml",
-      "sha256": "0864bbeffec7f83d63161e621c71f6c8697fdde1392833a64f82164ed84b6c6b"
+      "sha256": "9e17a55ea209d0c041c1412a550c5c021a6503163ddb0de75d370239566f3e08"
     },
     {
       "path": ".github/workflows/ishiku-upstream-update-upstream-update.yml",
-      "sha256": "a2d6630c1c13ee2e073f50b5ece4706369032db83969b10a5073580372978916"
+      "sha256": "a1807b2a6bd568f1dfe5f5119daef8dad8abfe23f820739ad5367008331136d2"
     },
     {
       "path": ".ishiku/kit/platform.yaml",
@@ -183,12 +183,8 @@
       "sha256": "13f3b5c85d9f7862c3b4424af965ada44ddb48e47b8d077be463c4af6e4e1aff"
     },
     {
-      "path": ".ishiku/kit/schemas/project.schema-Marlo_Desktop.json",
-      "sha256": "fe945b2a0fb58327f4a0e78cbd79196eeb21cda0cfd8bc92fd3d1740c43cc9fd"
-    },
-    {
       "path": ".ishiku/kit/schemas/project.schema.json",
-      "sha256": "a6b52892091922c839679effca66333c247f99497fad48a3802417d39efbff1f"
+      "sha256": "fe945b2a0fb58327f4a0e78cbd79196eeb21cda0cfd8bc92fd3d1740c43cc9fd"
     },
     {
       "path": ".ishiku/kit/schemas/traceability.schema.json",
@@ -236,7 +232,7 @@
     },
     {
       "path": ".ishiku/kit/scripts/ishiku.mjs",
-      "sha256": "36e43aaefc66deca91c009c65bdfb1713a5972f3b5e6dca705fe22fc45a600eb"
+      "sha256": "4b34eb0c158323a29e04937294d526db9eabd43df5de57ddf9ce038cfae95cbb"
     },
     {
       "path": ".ishiku/kit/scripts/verify-app",
@@ -262,7 +258,8 @@
     ".github/workflows/ishiku-release-release.yml"
   ],
   "local_changes": [
-    ".github/workflows/ishiku-release-release.yml: Keyku multi-architecture build and digest vulnerability gates",
+    ".ishiku/kit/: restore the current design-system verifier and remove stale Marlo_Desktop synchronization-conflict files",
+    ".github/workflows/: current full-SHA action pins plus Keyku browser, multi-architecture, digest, and vulnerability gates",
     ".agents/skills/ishiku-icon-generator/scripts/__pycache__/: exclude transient platform-specific Python bytecode from managed release files"
   ]
 }

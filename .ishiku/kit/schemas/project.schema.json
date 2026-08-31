@@ -23,7 +23,7 @@
       "properties": {
         "profile": { "type": "string" },
         "authentication": { "enum": ["standard-account", "dropiku-totp-vault", "meiku-client-vault"] },
-        "design_system": { "const": "ishiku-design-1" },
+        "design_system": { "const": "ishiku-design-5" },
         "security_baseline": { "const": "level-2" },
         "locale": { "const": "en" }
       }
@@ -59,9 +59,9 @@
       "type": "object",
       "required": ["commands"],
       "properties": {
-        "commands": { "type": "array", "items": { "type": "object", "required": ["name", "command"], "properties": { "name": { "type": "string" }, "command": { "type": "string" }, "required_for_verified": { "type": "boolean" } } }
+        "commands": { "type": "array", "items": { "type": "object", "required": ["name", "command"], "properties": { "name": { "type": "string" }, "command": { "type": "string" }, "required_for_verified": { "type": "boolean" } } } }
       }
     },
-    "upstreams": { "type": "array", "items": { "type": "object", "required": ["id", "source", "strategy"], "properties": { "id": { "type": "string" }, "source": { "type": "string" }, "strategy": { "enum": ["dependency", "container", "generated", "adapter"] } } }
+    "upstreams": { "type": "array", "items": { "type": "object", "required": ["id", "source", "strategy"], "properties": { "id": { "type": "string" }, "source": { "type": "string" }, "strategy": { "enum": ["dependency", "container", "generated", "adapter"] } } } }
   }
 }

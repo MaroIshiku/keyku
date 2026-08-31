@@ -2,7 +2,7 @@ name: keyku
 
 services:
   keyku-init:
-    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.1}
+    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.2}
     user: "0:0"
     restart: "no"
     read_only: true
@@ -35,7 +35,7 @@ services:
           create_host_path: true
           selinux: Z
   keyku:
-    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.1}
+    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.2}
     container_name: keyku
     depends_on:
       keyku-init:
@@ -58,10 +58,8 @@ services:
     environment:
       TZ: "Europe/Berlin"
       ISHIKU_APP_URL: "https://keyku.example.local"
-      ISHIKU_BASE_PATH: "/"
       ISHIKU_COOKIE_SECURE: "auto"
       ISHIKU_DATA_DIR: "/data"
-      ISHIKU_LOG_LEVEL: "info"
       ISHIKU_TRUST_PROXY: "false"
       ISHIKU_SETUP_SECRET: "${ISHIKU_SETUP_SECRET:-}"
       PORT: "3000"

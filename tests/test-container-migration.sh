@@ -164,4 +164,46 @@ compose "$legacy_project" "$legacy_data" restart keyku >/dev/null
 wait_ready "$legacy_project" "$legacy_data" >/dev/null
 compose "$legacy_project" "$legacy_data" exec -T keyku grep -q 'Synthetic Legacy Game' /data/keys.csv
 
-printf '%s\n' "Keyku container migration checks passed."
+# Exercise the documented full-directory backup and restore path with the same
+# non-root UID that owns the persistent data. The copy containers have no
+# network, capabilities, writable root filesystem, or privilege escalation.
+compose "$legacy_project" "$legacy_data" stop keyku >/dev/null
+backup_data="$TEST_ROOT/backup"
+restore_data="$TEST_ROOT/restore"
+install -d -m 0777 "$backup_data" "$restore_data"
+backup_cleanup_project="keyku-backup-cleanup-$$"
+PROJECTS="$PROJECTS $backup_cleanup_project:$backup_data"
+docker run --rm \
+  --network none \
+  --read-only \
+  --cap-drop ALL \
+  --security-opt no-new-privileges:true \
+  --user 10001:10001 \
+  -v "$legacy_data:/source:ro,z" \
+  -v "$backup_data:/destination:rw,z" \
+  "$IMAGE" \
+  python -c 'import shutil; shutil.copytree("/source", "/destination/data", copy_function=shutil.copy2)'
+docker run --rm \
+  --network none \
+  --read-only \
+  --cap-drop ALL \
+  --security-opt no-new-privileges:true \
+  --user 10001:10001 \
+  -v "$backup_data/data:/source:ro,z" \
+  -v "$restore_data:/destination:rw,z" \
+  "$IMAGE" \
+  python -c 'import pathlib, shutil; source = pathlib.Path("/source"); destination = pathlib.Path("/destination"); [(shutil.copytree(item, destination / item.name, copy_function=shutil.copy2) if item.is_dir() else shutil.copy2(item, destination / item.name)) for item in source.iterdir()]'
+compose "$legacy_project" "$legacy_data" down --remove-orphans >/dev/null
+
+restore_project="keyku-restore-$$"
+PROJECTS="$PROJECTS $restore_project:$restore_data"
+compose "$restore_project" "$restore_data" up -d
+restore_port=$(wait_ready "$restore_project" "$restore_data")
+assert_initializer_and_runtime "$restore_project" "$restore_data"
+curl --fail --silent --show-error \
+  -H 'Content-Type: application/json' \
+  --data '{"username":"legacy-admin","password":"synthetic-legacy-password-123456"}' \
+  "http://127.0.0.1:$restore_port/api/auth/login" >/dev/null
+compose "$restore_project" "$restore_data" exec -T keyku grep -q 'Synthetic Legacy Game' /data/keys.csv
+
+printf '%s\n' "Keyku container migration, persistence, backup, and restore checks passed."

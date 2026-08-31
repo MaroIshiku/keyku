@@ -1,0 +1,11 @@
+{
+  "id": "DEC-002",
+  "date": "2026-08-31",
+  "decision": "Use pinned Playwright and axe-core development dependencies for clone-local browser, responsive, and WCAG verification.",
+  "purpose": "The central verification policy requires executed browser E2E, axe, keyboard, and horizontal-overflow evidence that the Flask unit suite cannot provide.",
+  "maintenance": "Both projects are actively maintained upstream and are checked by the weekly npm and GitHub advisory workflow.",
+  "licenses": {"@playwright/test":"Apache-2.0","axe-core":"MPL-2.0 reviewed and accepted for test-only use; it is not shipped in the runtime image."},
+  "security_and_size": "The dependencies execute only in verification. node_modules, browsers, tests, reports, and npm caches stay outside the runtime Docker context and image.",
+  "alternatives": "Manual-only browser checks would not be reproducible; browser automation without axe-core would not provide the required accessibility engine.",
+  "removal_plan": "Remove these dependencies if the central kit supplies an equivalent pinned browser and accessibility harness, preserving the same checks and evidence."
+}
