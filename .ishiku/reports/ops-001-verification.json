@@ -2,8 +2,8 @@
   "schema_version": 1,
   "requirement": "OPS-001",
   "application": "keyku",
-  "version": "0.3.2",
-  "verified_at": "2026-08-31T11:14:08.302Z",
+  "version": "0.3.3",
+  "verified_at": "2026-09-02T12:17:37.906Z",
   "status": "VERIFIED",
   "environment": {
     "docker": "29.7.2",
@@ -14,8 +14,8 @@
   },
   "image": {
     "local_reference": "keyku:verify",
-    "config_digest": "sha256:701a2df09ce3d2462027a0c166d415bf84068688ed841d66e9e2c0b462d705f0",
-    "size_bytes": 68573704,
+    "config_digest": "sha256:4f439e822c6ab7a93c486aac66a2854ac25fdd4c035165b069125d2ad263233c",
+    "size_bytes": 68573699,
     "base": "python:3.14-alpine@sha256:05b2b8b732ecd268fee8727a369f936f022d1321b59befd13c30ede22769dcdc",
     "runtime_user": "10001:10001",
     "container_port": 3000,
@@ -23,12 +23,17 @@
     "declared_architectures": ["linux/amd64", "linux/arm64"]
   },
   "verification": {
-    "full_gate": {"passed": 461, "failed": 0},
+    "full_gate": {"passed": 478, "failed": 0},
     "application_tests": {"passed": 6, "failed": 0},
     "browser_e2e": {"passed": 1, "failed": 0, "themes": 6, "modes": 2, "viewports": 5},
     "design": {"passed": 33, "failed": 0},
     "compose_primary": "passed",
     "compose_example": "passed",
+    "compose_contract": {
+      "status": "passed",
+      "zimaos_normalization": "passed",
+      "conflicting_limits_rejected": "passed"
+    },
     "runtime": {
       "fresh_start": "passed",
       "readiness_endpoint": "passed",

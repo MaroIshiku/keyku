@@ -1,7 +1,7 @@
 {
   "name": "keyku-verification",
   "private": true,
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Reproducible browser, accessibility, and responsive verification for Keyku.",
   "scripts": {"test:browser": "node tests/run-browser.mjs"},
   "devDependencies": {"@playwright/test": "1.62.1", "axe-core": "4.13.0"}

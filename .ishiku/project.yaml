@@ -51,6 +51,11 @@
         "required_for_verified": true
       },
       {
+        "name": "compose-contract",
+        "command": "node tests/test-compose-contract.mjs",
+        "required_for_verified": true
+      },
+      {
         "name": "container",
         "command": "docker build --load -t keyku:verify .",
         "required_for_verified": true

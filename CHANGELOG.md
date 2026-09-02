@@ -2,6 +2,16 @@
 
 All notable changes to Keyku are documented here. Releases use immutable semantic-version tags.
 
+## 0.3.3 - 2026-09-02
+
+- Added matching Compose `deploy.resources.limits` for the one-shot initializer so ZimaOS does not inject conflicting CPU, memory, and PID limits that prevent the project from starting.
+- Added an executable Compose contract regression that proves the published primary and alternative Compose files remain valid after ZimaOS-style normalization and reject the original conflicting resource state.
+
+### Compatibility and rollback
+
+- Persistent data, authentication, host port `65005`, and container port `3000` are unchanged.
+- Existing 0.2.5, 0.3.0, 0.3.1, and 0.3.2 data remains compatible. Back up the complete data directory before updating; rollback to 0.3.2 requires only the previous image and Compose file.
+
 ## 0.3.2 - 2026-08-31
 
 - Restored the current clone-local ishiku design verifier and removed stale synchronization-conflict artifacts from the embedded kit.
