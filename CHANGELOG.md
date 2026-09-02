@@ -2,6 +2,16 @@
 
 All notable changes to Keyku are documented here. Releases use immutable semantic-version tags.
 
+## 0.3.4 - 2026-09-02
+
+- Raised the bounded memory limits for both the initializer and web service to 256 MiB so ZimaOS's automatic 256 MB reservations cannot exceed their limits and invalidate the Compose project.
+- Extended the Compose contract regression to normalize every service exactly like ZimaOS and to reproduce the Docker memory-reservation error reported against 0.3.3.
+
+### Compatibility and rollback
+
+- Persistent data, authentication, host port `65005`, and container port `3000` are unchanged.
+- Existing 0.2.5 through 0.3.3 data remains compatible. Back up the complete data directory before updating; rollback to 0.3.3 requires only the previous image and Compose file.
+
 ## 0.3.3 - 2026-09-02
 
 - Added matching Compose `deploy.resources.limits` for the one-shot initializer so ZimaOS does not inject conflicting CPU, memory, and PID limits that prevent the project from starting.

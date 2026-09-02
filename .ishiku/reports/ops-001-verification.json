@@ -2,8 +2,8 @@
   "schema_version": 1,
   "requirement": "OPS-001",
   "application": "keyku",
-  "version": "0.3.3",
-  "verified_at": "2026-09-02T12:17:37.906Z",
+  "version": "0.3.4",
+  "verified_at": "2026-09-02T12:38:55.574Z",
   "status": "VERIFIED",
   "environment": {
     "docker": "29.7.2",
@@ -14,7 +14,7 @@
   },
   "image": {
     "local_reference": "keyku:verify",
-    "config_digest": "sha256:4f439e822c6ab7a93c486aac66a2854ac25fdd4c035165b069125d2ad263233c",
+    "config_digest": "sha256:0783e0300ad1489a5d5260ee4015eecd1f60ac52cb3ee74a1559bf9cd252e8ea",
     "size_bytes": 68573699,
     "base": "python:3.14-alpine@sha256:05b2b8b732ecd268fee8727a369f936f022d1321b59befd13c30ede22769dcdc",
     "runtime_user": "10001:10001",
@@ -32,7 +32,9 @@
     "compose_contract": {
       "status": "passed",
       "zimaos_normalization": "passed",
-      "conflicting_limits_rejected": "passed"
+      "conflicting_limits_rejected": "passed",
+      "zimaos_256mb_reservations": "passed",
+      "daemon_memory_contract": "passed"
     },
     "runtime": {
       "fresh_start": "passed",

@@ -57,7 +57,7 @@
         "A fresh clone can build, test, and run without the outer workspace.",
         "Health checks, persistent data, runtime secrets, backup, restore, and upgrade procedures are verifiable.",
         "Fresh and legacy bind-mounted data directories are prepared by a bounded one-shot initializer before the non-root application starts.",
-        "The initializer declares matching service and deploy resource limits so ZimaOS normalization cannot create an invalid Compose project.",
+        "Every service declares matching service and deploy resource limits at or above ZimaOS's 256 MB reservation so normalization cannot create an invalid Compose project.",
         "The ZimaOS host port is 65005 as assigned to application_id keyku; the compatible container port remains 3000."
       ],
       "security_critical": true

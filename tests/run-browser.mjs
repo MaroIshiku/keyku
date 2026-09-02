@@ -79,7 +79,7 @@ try {
     stdio: ["ignore", "pipe", "pipe"],
     env: {
       ...process.env,
-      APP_VERSION: "0.3.3-e2e",
+      APP_VERSION: "0.3.4-e2e",
       ISHIKU_APP_URL: baseURL,
       ISHIKU_COOKIE_SECURE: "false",
       ISHIKU_DATA_DIR: join(temporary, "data"),

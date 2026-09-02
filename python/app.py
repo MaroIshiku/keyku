@@ -20,7 +20,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 APP_ID = "keyku"
 APP_NAME = "Keyku - Key Vault"
 APP_SUBTITLE = "Secure Steam key sharing"
-APP_VERSION = os.environ.get("APP_VERSION", "0.3.3")
+APP_VERSION = os.environ.get("APP_VERSION", "0.3.4")
 APP_BUILD_DATE = os.environ.get("APP_BUILD_DATE", "local")
 APP_GIT_SHA = os.environ.get("GITHUB_SHA", os.environ.get("APP_GIT_SHA", "local"))
 PORT = int(os.environ.get("PORT", "3000"))

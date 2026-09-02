@@ -2,7 +2,7 @@ name: keyku
 
 services:
   keyku-init:
-    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.3}
+    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.4}
     user: "0:0"
     restart: "no"
     read_only: true
@@ -17,13 +17,13 @@ services:
       - no-new-privileges:true
     privileged: false
     pids_limit: 32
-    mem_limit: 32m
+    mem_limit: 256m
     cpus: 0.25
     deploy:
       resources:
         limits:
           cpus: "0.25"
-          memory: "33554432"
+          memory: "268435456"
           pids: 32
         reservations:
           devices: []
@@ -43,7 +43,7 @@ services:
           create_host_path: true
           selinux: Z
   keyku:
-    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.3}
+    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.4}
     container_name: keyku
     depends_on:
       keyku-init:
@@ -57,8 +57,16 @@ services:
     security_opt:
       - no-new-privileges:true
     pids_limit: 128
-    mem_limit: 128m
+    mem_limit: 256m
     cpus: 0.5
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "268435456"
+          pids: 128
+        reservations:
+          devices: []
     ports:
       - target: 3000
         published: "${KEYKU_PUBLISHED_PORT:-65005}"
