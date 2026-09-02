@@ -169,6 +169,55 @@ def test_cross_site_and_oversized_requests_fail_closed(keyku):
     assert oversized.status_code == 413
 
 
+def test_configured_https_origin_is_allowed_behind_an_untrusted_proxy(keyku, monkeypatch):
+    monkeypatch.setenv("ISHIKU_APP_URL", "https://keyku.example.test")
+    client = keyku.app.test_client()
+    setup = client.post(
+        "/api/setup/register-admin",
+        json={
+            "setupSecret": SETUP_SECRET,
+            "displayName": "Synthetic Admin",
+            "adminUsername": "admin-user",
+            "password": ADMIN_PASSWORD,
+            "passwordConfirm": ADMIN_PASSWORD,
+        },
+        headers={"Origin": "https://keyku.example.test"},
+    )
+    assert setup.status_code == 201
+
+    csrf = setup.headers["X-CSRF-Token"]
+    allowed = client.post(
+        "/api/admin/keys",
+        json={"game": "Proxy Origin Game", "key": "AAAA-BBBB-CCCC"},
+        headers={"Origin": "https://keyku.example.test:443", "X-CSRF-Token": csrf},
+    )
+    assert allowed.status_code == 201
+
+    rejected = client.post(
+        "/api/admin/keys",
+        json={"game": "Rejected Origin Game", "key": "DDDD-EEEE-FFFF"},
+        headers={"Origin": "https://keyku.example.test.attacker.invalid", "X-CSRF-Token": csrf},
+    )
+    assert rejected.status_code == 403
+    assert rejected.get_json()["error"] == "Request origin rejected."
+
+    malformed = client.post(
+        "/api/admin/keys",
+        json={"game": "Malformed Origin Game", "key": "GGGG-HHHH-IIII"},
+        headers={"Origin": "null", "X-CSRF-Token": csrf},
+    )
+    assert malformed.status_code == 403
+    assert malformed.get_json()["error"] == "Request origin rejected."
+
+    origin_with_path = client.post(
+        "/api/admin/keys",
+        json={"game": "Origin Path Game", "key": "JJJJ-KKKK-LLLL"},
+        headers={"Origin": "https://keyku.example.test/not-an-origin", "X-CSRF-Token": csrf},
+    )
+    assert origin_with_path.status_code == 403
+    assert origin_with_path.get_json()["error"] == "Request origin rejected."
+
+
 def test_short_setup_secret_is_rejected_without_blocking_existing_install(tmp_path, monkeypatch):
     monkeypatch.setenv("ISHIKU_DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("ISHIKU_SETUP_SECRET", "too-short")

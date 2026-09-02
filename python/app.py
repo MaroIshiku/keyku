@@ -9,7 +9,7 @@ import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import RLock
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
@@ -20,7 +20,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 APP_ID = "keyku"
 APP_NAME = "Keyku - Key Vault"
 APP_SUBTITLE = "Secure Steam key sharing"
-APP_VERSION = os.environ.get("APP_VERSION", "0.3.4")
+APP_VERSION = os.environ.get("APP_VERSION", "0.3.5")
 APP_BUILD_DATE = os.environ.get("APP_BUILD_DATE", "local")
 APP_GIT_SHA = os.environ.get("GITHUB_SHA", os.environ.get("APP_GIT_SHA", "local"))
 PORT = int(os.environ.get("PORT", "3000"))
@@ -646,8 +646,31 @@ def key_fingerprint(key):
     return hmac_token("key-fingerprint:v1", key)
 
 
+def configured_public_url():
+    return (os.environ.get("ISHIKU_APP_URL") or os.environ.get("PUBLIC_BASE_URL") or os.environ.get("APP_BASE_URL") or "").strip().rstrip("/")
+
+
+def url_origin(value, allow_path=False):
+    try:
+        parsed = urlsplit(str(value or "").strip())
+        port = parsed.port
+    except ValueError:
+        return None
+    scheme = parsed.scheme.lower()
+    host = (parsed.hostname or "").lower()
+    if scheme not in {"http", "https"} or not host or parsed.username or parsed.password or parsed.query or parsed.fragment:
+        return None
+    if not allow_path and parsed.path not in {"", "/"}:
+        return None
+    if ":" in host:
+        host = f"[{host}]"
+    default_port = 80 if scheme == "http" else 443
+    authority = f"{host}:{port}" if port and port != default_port else host
+    return f"{scheme}://{authority}"
+
+
 def public_base_url():
-    configured = (os.environ.get("ISHIKU_APP_URL") or os.environ.get("PUBLIC_BASE_URL") or os.environ.get("APP_BASE_URL") or "").strip().rstrip("/")
+    configured = configured_public_url()
     if configured:
         return configured
     proto = request.headers.get("X-Forwarded-Proto") or request.scheme
@@ -728,8 +751,11 @@ def request_security():
     if fetch_site == "cross-site":
         return jsonify({"error": "Cross-site request rejected."}), 403
     origin = request.headers.get("Origin")
-    if origin and origin != request.host_url.rstrip("/"):
-        return jsonify({"error": "Request origin rejected."}), 403
+    if origin:
+        allowed_origins = {candidate for candidate in (url_origin(request.host_url), url_origin(configured_public_url(), allow_path=True)) if candidate}
+        request_origin = url_origin(origin)
+        if not request_origin or request_origin not in allowed_origins:
+            return jsonify({"error": "Request origin rejected."}), 403
     if request.path in PUBLIC_MUTATION_PATHS:
         return None
     user, session = session_context(update_activity=False)

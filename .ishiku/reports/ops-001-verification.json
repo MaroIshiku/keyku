@@ -2,8 +2,8 @@
   "schema_version": 1,
   "requirement": "OPS-001",
   "application": "keyku",
-  "version": "0.3.4",
-  "verified_at": "2026-09-02T12:38:55.574Z",
+  "version": "0.3.5",
+  "verified_at": "2026-09-02T16:50:16.685Z",
   "status": "VERIFIED",
   "environment": {
     "docker": "29.7.2",
@@ -14,8 +14,8 @@
   },
   "image": {
     "local_reference": "keyku:verify",
-    "config_digest": "sha256:0783e0300ad1489a5d5260ee4015eecd1f60ac52cb3ee74a1559bf9cd252e8ea",
-    "size_bytes": 68573699,
+    "config_digest": "sha256:dcb9eb90083f681c7e11f679a1dbec4f5bf319370a29c71d4b7854c3f41e5865",
+    "size_bytes": 68574715,
     "base": "python:3.14-alpine@sha256:05b2b8b732ecd268fee8727a369f936f022d1321b59befd13c30ede22769dcdc",
     "runtime_user": "10001:10001",
     "container_port": 3000,
@@ -24,7 +24,7 @@
   },
   "verification": {
     "full_gate": {"passed": 478, "failed": 0},
-    "application_tests": {"passed": 6, "failed": 0},
+    "application_tests": {"passed": 7, "failed": 0},
     "browser_e2e": {"passed": 1, "failed": 0, "themes": 6, "modes": 2, "viewports": 5},
     "design": {"passed": 33, "failed": 0},
     "compose_primary": "passed",
@@ -52,6 +52,8 @@
       "trivy_filesystem_high_critical": 0,
       "trivy_image_high_critical": 0,
       "trivy_misconfigurations": 0,
+      "canonical_proxy_origin": "passed",
+      "cross_site_and_malformed_origins_rejected": "passed",
       "cyclonedx_sbom_generated": true
     }
   },

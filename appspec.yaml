@@ -25,6 +25,7 @@
       "acceptance": [
         "Account authentication uses generic errors, account and network rate limits, and Argon2id with upgrade-on-login for legacy PBKDF2 hashes.",
         "Sessions are server-side revocable, rotated, idle- and absolute-time-bounded, cookie-protected, and CSRF-protected.",
+        "The configured public application origin is accepted behind an HTTPS-terminating reverse proxy without trusting spoofable proxy headers, while unrelated origins remain denied.",
         "Security-relevant authentication, session, password, and administration events are audited without recording secret values."
       ],
       "security_critical": true

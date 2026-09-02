@@ -15,7 +15,7 @@
         "unit": ["tests/test_app.py"],
         "integration": ["tests/test_app.py"],
         "e2e": ["tests/e2e/keyku.spec.mjs"],
-        "security": ["tests/test_app.py::test_setup_uses_argon2_and_csrf_protects_mutations", "tests/test_app.py::test_login_is_generic_rate_limited_and_upgrades_legacy_pbkdf2", "tests/test_app.py::test_sessions_are_listed_revocable_and_expire", "tests/test_app.py::test_cross_site_and_oversized_requests_fail_closed", "tests/test_app.py::test_password_change_revokes_other_sessions_and_rotates_current"]
+        "security": ["tests/test_app.py::test_setup_uses_argon2_and_csrf_protects_mutations", "tests/test_app.py::test_login_is_generic_rate_limited_and_upgrades_legacy_pbkdf2", "tests/test_app.py::test_sessions_are_listed_revocable_and_expire", "tests/test_app.py::test_cross_site_and_oversized_requests_fail_closed", "tests/test_app.py::test_configured_https_origin_is_allowed_behind_an_untrusted_proxy", "tests/test_app.py::test_password_change_revokes_other_sessions_and_rotates_current"]
       },
       "status": "verified"
     },

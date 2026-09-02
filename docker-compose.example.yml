@@ -2,7 +2,7 @@ name: keyku
 
 services:
   keyku-init:
-    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.4}
+    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.5}
     user: "0:0"
     restart: "no"
     read_only: true
@@ -43,7 +43,7 @@ services:
           create_host_path: true
           selinux: Z
   keyku:
-    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.4}
+    image: ${KEYKU_IMAGE:-ghcr.io/maroishiku/keyku:v0.3.5}
     container_name: keyku
     depends_on:
       keyku-init:

@@ -2,6 +2,16 @@
 
 All notable changes to Keyku are documented here. Releases use immutable semantic-version tags.
 
+## 0.3.5 - 2026-09-02
+
+- Fixed first-run registration and other protected mutations behind an HTTPS-terminating reverse proxy when `ISHIKU_TRUST_PROXY=false`: the canonical origin from `ISHIKU_APP_URL` is now accepted independently of the internal HTTP scheme.
+- Kept origin protection fail-closed for malformed, cross-site, and lookalike-domain origins without enabling trust in client-supplied forwarding headers.
+
+### Compatibility and rollback
+
+- Persistent data, authentication, ports, resource limits, and the initializer lifecycle are unchanged.
+- Existing 0.2.5 through 0.3.4 data remains compatible. Rollback to 0.3.4 requires only the previous image and Compose file.
+
 ## 0.3.4 - 2026-09-02
 
 - Raised the bounded memory limits for both the initializer and web service to 256 MiB so ZimaOS's automatic 256 MB reservations cannot exceed their limits and invalidate the Compose project.

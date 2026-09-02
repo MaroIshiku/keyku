@@ -24,7 +24,7 @@ services:
         find /data -xdev -exec chown -h 10001:10001 {} +
         find /data -xdev -type d -exec chmod 0750 {} +
         find /data -xdev -type f -exec chmod 0600 {} +
-    image: ghcr.io/maroishiku/keyku:v0.3.4
+    image: ghcr.io/maroishiku/keyku:v0.3.5
     mem_limit: "268435456"
     network_mode: none
     pids_limit: 32
@@ -82,7 +82,7 @@ services:
       retries: 3
       start_period: 10s
     hostname: keyku
-    image: ghcr.io/maroishiku/keyku:v0.3.4
+    image: ghcr.io/maroishiku/keyku:v0.3.5
     init: true
     labels:
       icon: https://raw.githubusercontent.com/MaroIshiku/keyku/main/public/icons/icon-512.png

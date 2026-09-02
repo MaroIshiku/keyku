@@ -78,7 +78,7 @@ Enter the setup secret, display name, admin username, and admin password in the 
 | Variable | Description |
 | --- | --- |
 | `TZ` | Time zone, recommended `Europe/Berlin` |
-| `ISHIKU_APP_URL` | Public URL behind a reverse proxy, used for share links |
+| `ISHIKU_APP_URL` | Canonical public URL behind a reverse proxy, used for share links, secure-cookie auto-detection, and same-origin request validation |
 | `ISHIKU_DATA_DIR` | Persistent data directory in the container, default `/data` |
 | `ISHIKU_TRUST_PROXY` | Set to `true` when running behind a trusted reverse proxy |
 | `ISHIKU_COOKIE_SECURE` | `auto` enables secure cookies for HTTPS; set explicitly only for a documented deployment need |
@@ -138,7 +138,7 @@ The container runs as UID/GID `10001`. When using a bind mount outside the suppl
 
 ## Updates and Backup
 
-Before every update, stop Keyku and copy the complete persistent directory. Version 0.3.0 and later upgrade legacy PBKDF2 password hashes to Argon2id after a successful sign-in, so a rollback to 0.2.5 must restore the matching pre-upgrade data backup as well as the older image. Version 0.3.1 adds automatic permission preparation for both root-owned 0.2.5 data and fresh ZimaOS bind directories while keeping the web service non-root. Version 0.3.2 keeps that data format unchanged; existing completed installations continue to start even if an old setup-secret value was shorter than the new first-run minimum. Versions 0.3.3 and 0.3.4 make all resource declarations compatible with ZimaOS Compose normalization, including its automatic 256 MB service reservations, without changing persistent data.
+Before every update, stop Keyku and copy the complete persistent directory. Version 0.3.0 and later upgrade legacy PBKDF2 password hashes to Argon2id after a successful sign-in, so a rollback to 0.2.5 must restore the matching pre-upgrade data backup as well as the older image. Version 0.3.1 adds automatic permission preparation for both root-owned 0.2.5 data and fresh ZimaOS bind directories while keeping the web service non-root. Version 0.3.2 keeps that data format unchanged; existing completed installations continue to start even if an old setup-secret value was shorter than the new first-run minimum. Versions 0.3.3 and 0.3.4 make all resource declarations compatible with ZimaOS Compose normalization, including its automatic 256 MB service reservations. Version 0.3.5 accepts the canonical `ISHIKU_APP_URL` origin behind HTTPS-terminating reverse proxies without enabling general proxy-header trust. None of these releases changes persistent data.
 
 ```bash
 docker compose stop
