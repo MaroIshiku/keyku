@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1.7
 
-FROM python:3.14-alpine@sha256:05b2b8b732ecd268fee8727a369f936f022d1321b59befd13c30ede22769dcdc
+FROM python:3.14-alpine@sha256:c6ead215bfd31f1e433d968853b7a769989117115b728874824e6c0a27cb96fc
 
-ARG APP_VERSION=0.3.6
+ARG APP_VERSION=0.3.7
 ARG APP_BUILD_DATE=local
 ARG GITHUB_SHA=local
 
@@ -27,6 +27,7 @@ WORKDIR /app
 
 COPY python/requirements.txt /app/requirements.txt
 RUN apk add --no-cache --upgrade \
+        libuuid=2.42.3-r1 \
         libcrypto3=3.5.8-r0 \
         libssl3=3.5.8-r0 \
     && python -m pip install --no-cache-dir -r /app/requirements.txt \

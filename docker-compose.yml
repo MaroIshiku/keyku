@@ -24,7 +24,7 @@ services:
         find /data -xdev -exec chown -h 10001:10001 {} +
         find /data -xdev -type d -exec chmod 0750 {} +
         find /data -xdev -type f -exec chmod 0600 {} +
-    image: ghcr.io/maroishiku/keyku:v0.3.6
+    image: ghcr.io/maroishiku/keyku:v0.3.7
     mem_limit: "268435456"
     network_mode: none
     pids_limit: 32
@@ -82,10 +82,10 @@ services:
       retries: 3
       start_period: 10s
     hostname: keyku
-    image: ghcr.io/maroishiku/keyku:v0.3.6
+    image: ghcr.io/maroishiku/keyku:v0.3.7
     init: true
     labels:
-      icon: https://raw.githubusercontent.com/MaroIshiku/keyku/v0.3.6/public/icons/icon-512.png
+      icon: https://raw.githubusercontent.com/MaroIshiku/keyku/v0.3.7/public/icons/icon-512.png
       org.opencontainers.image.description: Self-hosted Steam key vault with first-run admin setup and public share links.
       org.opencontainers.image.source: https://github.com/MaroIshiku/keyku
       org.opencontainers.image.title: Keyku - Key Vault
@@ -137,7 +137,7 @@ x-casaos:
     en_us: Self-hosted Steam key vault with admin setup, protected accounts and public share links.
   developer: MaroIshiku
   hostname: ""
-  icon: https://raw.githubusercontent.com/MaroIshiku/keyku/v0.3.6/public/icons/icon-512.png
+  icon: https://raw.githubusercontent.com/MaroIshiku/keyku/v0.3.7/public/icons/icon-512.png
   index: /
   is_uncontrolled: false
   main: keyku
@@ -147,7 +147,7 @@ x-casaos:
   tagline:
     de_de: Privater Steam-Key-Tresor fuer Familie und Freunde.
     en_us: Private Steam key vault for family and friends.
-  thumbnail: https://raw.githubusercontent.com/MaroIshiku/keyku/v0.3.6/public/icons/icon-512.png
+  thumbnail: https://raw.githubusercontent.com/MaroIshiku/keyku/v0.3.7/public/icons/icon-512.png
   tips:
     before_install:
       de_de: >

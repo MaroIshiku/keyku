@@ -2,8 +2,8 @@
   "schema_version": 1,
   "requirement": "OPS-001",
   "application": "keyku",
-  "version": "0.3.6",
-  "verified_at": "2026-09-07T15:50:28.095Z",
+  "version": "0.3.7",
+  "verified_at": "2026-09-07T16:03:51.427Z",
   "status": "VERIFIED",
   "environment": {
     "docker": "29.7.2",
@@ -14,16 +14,16 @@
   },
   "image": {
     "local_reference": "keyku:verify",
-    "config_digest": "sha256:ba103697bbfa6b7d375c09c09b3267c79c517d12ae0dd8f7954dc86834d9249a",
-    "size_bytes": 68574723,
-    "base": "python:3.14-alpine@sha256:05b2b8b732ecd268fee8727a369f936f022d1321b59befd13c30ede22769dcdc",
+    "config_digest": "sha256:a9a84a0135d54070bc7b4b4353d1c71e47d8649bf74e7ce3d84b3b37d42ab280",
+    "size_bytes": 68607533,
+    "base": "python:3.14-alpine@sha256:c6ead215bfd31f1e433d968853b7a769989117115b728874824e6c0a27cb96fc",
     "runtime_user": "10001:10001",
     "container_port": 3000,
     "published_host_port": 65005,
     "declared_architectures": ["linux/amd64", "linux/arm64"]
   },
   "verification": {
-    "full_gate": {"passed": 488, "failed": 0},
+    "full_gate": {"passed": 491, "failed": 0},
     "application_tests": {"passed": 7, "failed": 0},
     "browser_e2e": {"passed": 1, "failed": 0, "themes": 6, "modes": 2, "viewports": 5},
     "design": {"passed": 33, "failed": 0},
@@ -60,6 +60,7 @@
       "trivy_filesystem_high_critical": 0,
       "trivy_image_high_critical": 0,
       "trivy_misconfigurations": 0,
+      "libuuid_version": "2.42.3-r1",
       "canonical_proxy_origin": "passed",
       "cross_site_and_malformed_origins_rejected": "passed",
       "cyclonedx_sbom_generated": true

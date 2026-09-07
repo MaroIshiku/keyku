@@ -2,11 +2,18 @@
 
 All notable changes to Keyku are documented here. Releases use immutable semantic-version tags.
 
+## 0.3.7 - 2026-09-07
+
+- Update the pinned official Python 3.14 Alpine image manifest and install Alpine `libuuid` 2.42.3-r1, fixing the HIGH-severity util-linux findings that blocked v0.3.6.
+- Publish the approved Amber icon under versioned ZimaOS catalog URLs and promote the fully verified release digest to `latest` after all release gates succeed.
+- Keep application data, authentication, ports, and rollback formats unchanged.
+
 ## 0.3.6 - 2026-09-07
 
 - Promote each fully verified, scanned, and attested release digest to the `latest` GHCR compatibility tag without rebuilding it.
 - Use a versioned ZimaOS catalog icon URL so launcher and thumbnail caches refresh to the approved Amber Keyku icon.
 - Keep the official Compose delivery pinned to immutable version tags while supporting existing ZimaOS installations that explicitly track `latest`.
+- The v0.3.6 release gate detected newly published Alpine util-linux vulnerabilities and stopped before attestation or `latest` promotion; v0.3.6 is not an approved release.
 
 ## 0.3.5 - 2026-09-02
 

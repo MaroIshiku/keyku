@@ -1,0 +1,32 @@
+{
+  "id": "DEC-004",
+  "date": "2026-09-07",
+  "upstream": "Alpine Linux 3.24 main repository via the official Python 3.14 Alpine image",
+  "decision": "Pin the current official python:3.14-alpine manifest and explicitly upgrade libuuid to Alpine revision 2.42.3-r1 during the image build.",
+  "current": {
+    "base_digest": "sha256:05b2b8b732ecd268fee8727a369f936f022d1321b59befd13c30ede22769dcdc",
+    "libuuid": "2.42.1-r0"
+  },
+  "candidate": {
+    "base_digest": "sha256:c6ead215bfd31f1e433d968853b7a769989117115b728874824e6c0a27cb96fc",
+    "libuuid": "2.42.3-r1",
+    "python": "3.14.7",
+    "alpine": "3.24.1"
+  },
+  "security": {
+    "severity": "HIGH",
+    "findings": [
+      "CVE-2026-53612",
+      "CVE-2026-53613",
+      "CVE-2026-53614",
+      "CVE-2026-76642",
+      "CVE-2026-78408",
+      "CVE-2026-78409",
+      "CVE-2026-78410"
+    ],
+    "source": "Alpine package index and the executed Trivy v0.70.0 release gate"
+  },
+  "license": "BSD-3-Clause",
+  "compatibility": "No application, network, authentication, or persistent-data format changes. The package remains ABI-compatible as libuuid.so.1.",
+  "rollback": "Use the previous immutable v0.3.5 image digest only together with its recorded vulnerability status; do not promote the failed v0.3.6 image."
+}
