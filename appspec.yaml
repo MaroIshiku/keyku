@@ -69,7 +69,8 @@
       "priority": "high",
       "acceptance": [
         "Pull requests and releases use clone-local verification scripts.",
-        "Released images are immutable, scanned, SBOM-equipped, provenance-attested, and rollback-documented."
+        "Released images are immutable, scanned, SBOM-equipped, provenance-attested, and rollback-documented.",
+        "After every release gate succeeds, the exact verified multi-architecture digest is promoted without rebuilding to the latest compatibility tag for explicitly configured ZimaOS installations; official Compose delivery remains pinned to an immutable semantic-version tag."
       ],
       "security_critical": true
     }

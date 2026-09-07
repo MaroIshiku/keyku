@@ -2,6 +2,12 @@
 
 All notable changes to Keyku are documented here. Releases use immutable semantic-version tags.
 
+## 0.3.6 - 2026-09-07
+
+- Promote each fully verified, scanned, and attested release digest to the `latest` GHCR compatibility tag without rebuilding it.
+- Use a versioned ZimaOS catalog icon URL so launcher and thumbnail caches refresh to the approved Amber Keyku icon.
+- Keep the official Compose delivery pinned to immutable version tags while supporting existing ZimaOS installations that explicitly track `latest`.
+
 ## 0.3.5 - 2026-09-02
 
 - Fixed first-run registration and other protected mutations behind an HTTPS-terminating reverse proxy when `ISHIKU_TRUST_PROXY=false`: the canonical origin from `ISHIKU_APP_URL` is now accepted independently of the internal HTTP scheme.

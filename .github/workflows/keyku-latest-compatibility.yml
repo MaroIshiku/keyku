@@ -1,0 +1,54 @@
+name: keyku latest compatibility
+
+on:
+  workflow_run:
+    workflows: ['ishiku release']
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keyku-latest-compatibility
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      REGISTRY_IMAGE: ghcr.io/maroishiku/keyku
+      SOURCE_TAG: ${{ github.event.workflow_run.head_branch }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - name: Promote verified release digest
+        shell: bash
+        run: |
+          if [[ ! "$SOURCE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Refusing non-release source tag: $SOURCE_TAG" >&2
+            exit 1
+          fi
+
+          source_manifest=$(docker buildx imagetools inspect \
+            "${REGISTRY_IMAGE}:${SOURCE_TAG}" --format '{{json .Manifest}}')
+          source_digest=$(jq --exit-status --raw-output '.digest | select(test("^sha256:[0-9a-f]{64}$"))' \
+            <<<"$source_manifest")
+
+          docker buildx imagetools create \
+            --tag "${REGISTRY_IMAGE}:latest" \
+            "${REGISTRY_IMAGE}@${source_digest}"
+
+          docker buildx imagetools inspect "${REGISTRY_IMAGE}:latest" \
+            --format '{{json .Manifest}}' \
+            | jq --exit-status --arg expected "$source_digest" '.digest == $expected'

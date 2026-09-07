@@ -39,7 +39,7 @@
     },
     {
       "id": "REL-001",
-      "implementation": [".github/workflows/ishiku-pull-request-verify.yml", ".github/workflows/ishiku-release-release.yml", ".github/dependabot.yml", ".ishiku/kit/scripts/check-release"],
+      "implementation": [".github/workflows/ishiku-pull-request-verify.yml", ".github/workflows/ishiku-release-release.yml", ".github/workflows/keyku-latest-compatibility.yml", ".github/dependabot.yml", ".ishiku/decisions/latest-zimaos-compatibility.json", ".ishiku/kit/scripts/check-release"],
       "tests": {"unit": [], "integration": [".ishiku/kit/scripts/check-release", ".ishiku/kit/scripts/verify-app"], "e2e": [], "security": [".ishiku/kit/scripts/check-security"]},
       "status": "verified"
     }

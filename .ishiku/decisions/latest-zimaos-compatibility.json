@@ -1,0 +1,14 @@
+{
+  "id": "DEC-003",
+  "date": "2026-09-07",
+  "decision": "Publish a GHCR latest compatibility tag after every fully verified Keyku release while keeping official Compose files pinned to immutable semantic-version tags.",
+  "rationale": "Existing ZimaOS installations explicitly configured to track latest otherwise remain on the historical 0.2.1 image and miss security, compatibility, and icon updates.",
+  "scope": "The release workflow promotes the exact already-built, scanned, and provenance-attested multi-architecture digest after all release gates pass. It never rebuilds during promotion and official installation files do not consume latest.",
+  "risk_controls": [
+    "Promotion runs only after full verification, both architecture vulnerability scans, and provenance attestation succeed.",
+    "The immutable semantic-version tag and digest remain the authoritative release and rollback references.",
+    "A digest equality check fails the release if latest does not resolve to the promoted release index."
+  ],
+  "review_date": "2026-12-07",
+  "removal_plan": "Remove the compatibility tag after all managed ZimaOS installations use an immutable semantic-version tag or digest."
+}
